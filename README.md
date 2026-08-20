@@ -19,8 +19,7 @@ python3 -m http.server 8123 --directory app
 
 Open http://localhost:8123. Location and photo persistence need a secure
 context: `localhost` works as-is; on a phone the app must be served over
-**HTTPS** (deploy `app/` to GitHub Pages, Netlify, Cloudflare Pages, or tunnel
-with `tailscale serve` / `ngrok`).
+**HTTPS**.
 
 Useful URL params: `?at=59.449,24.735` fakes your location (desktop testing),
 `?cam=cam232` preselects a camera.
