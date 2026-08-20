@@ -62,7 +62,7 @@ const map = L.map("map", { zoomControl: false, attributionControl: true })
 L.control.zoom({ position: "bottomright" }).addTo(map);
 L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
   maxZoom: 19,
-  attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> · cams: <a href="' + SITE + '">Tallinn</a>',
+  attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors · cams: <a href="' + SITE + '">City of Tallinn</a>',
 }).addTo(map);
 
 function spotKey(c) { return `${c.lat.toFixed(5)},${c.lng.toFixed(5)}`; }
@@ -529,6 +529,8 @@ async function boot() {
 }
 
 $("btn-locate").onclick = startLocating;
+$("btn-about").onclick = () => { $("about").hidden = false; };
+$("about-close").onclick = () => { $("about").hidden = true; };
 $("sheet-close").onclick = closeSheet;
 $("btn-shot").onclick = photoNow;
 document.querySelectorAll("[data-count]").forEach(b =>

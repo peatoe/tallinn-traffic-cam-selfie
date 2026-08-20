@@ -58,6 +58,7 @@ body {
   font-size: 12px; color: #666; margin-top: 2px;
   text-transform: lowercase; letter-spacing: .4px;
 }
+.topbar-btns { display: flex; gap: 8px; }
 .icon-btn {
   border: 1.5px solid var(--ink); background: var(--paper); color: var(--ink);
   width: 42px; height: 42px; border-radius: 50%;
@@ -295,6 +296,17 @@ body {
 }
 .result-note { font-size: 13px; color: #777; margin: 14px 0; text-align: center; }
 .result-actions { display: flex; gap: 10px; justify-content: center; }
+
+/* ---- about ---- */
+.about-body { font-size: 14.5px; line-height: 1.55; max-width: 640px; }
+.about-body h3 {
+  font-family: var(--headline); font-weight: 400; font-size: 20px;
+  text-transform: lowercase; margin: 20px 0 8px;
+}
+.about-body p { margin: 8px 0; }
+.about-body ul { padding-left: 20px; margin: 8px 0; }
+.about-body li { margin: 6px 0; }
+.about-body a { color: var(--accent); }
 
 [hidden] { display: none !important; }
 

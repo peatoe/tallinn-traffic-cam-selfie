@@ -55,6 +55,24 @@ coordinates for grade-separated interchanges and named spots (62 of 253 are
 approximate; `"approx": true` in the JSON). Overpass responses are cached in
 `.cache/`.
 
+## Deploy (GitHub Pages)
+
+A workflow at `.github/workflows/pages.yml` publishes the `app/` folder on
+every push to `main`. One-time setup after pushing the repo to GitHub:
+repository **Settings → Pages → Source: GitHub Actions**. The app then lives
+at `https://<user>.github.io/<repo>/` with HTTPS, which enables geolocation
+and photo persistence on phones.
+
+## Licences & data sources
+
+Code is MIT (see [LICENSE](LICENSE)). Camera imagery is the City of
+Tallinn's; map data and derived camera coordinates are © OpenStreetMap
+contributors (ODbL) with address data from the Estonian Land Board; fonts are
+Brand Estonia's Aino family; the map library is Leaflet (BSD-2). Full
+attributions, licence texts, and the GDPR/privacy summary are in
+[THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md) and in the app's
+**about & privacy** screen (the ⓘ button).
+
 ## Notes
 
 - Camera frames are served by the city; images are typically a few seconds

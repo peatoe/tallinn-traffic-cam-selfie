@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#ffffff">
+<meta name="description" content="Turn Tallinn's public traffic cameras into selfie cameras. Pick a camera on the map, walk there, start a big countdown, wave.">
 <title>tallinn cam selfie</title>
 <link rel="stylesheet" href="vendor/leaflet.css">
 <link rel="stylesheet" href="style.css">
@@ -16,9 +17,14 @@
     <h1 class="brand-title">tallinn cam selfie</h1>
     <div class="brand-sub">wave at a traffic camera</div>
   </div>
-  <button id="btn-locate" class="icon-btn" title="My location" aria-label="My location">
-    <svg viewBox="0 0 24 24" width="22" height="22"><path fill="currentColor" d="M12 8a4 4 0 1 0 0 8a4 4 0 0 0 0-8m8.94 3A8.99 8.99 0 0 0 13 3.06V1h-2v2.06A8.99 8.99 0 0 0 3.06 11H1v2h2.06A8.99 8.99 0 0 0 11 20.94V23h2v-2.06A8.99 8.99 0 0 0 20.94 13H23v-2zM12 19a7 7 0 1 1 0-14a7 7 0 0 1 0 14"/></svg>
-  </button>
+  <div class="topbar-btns">
+    <button id="btn-about" class="icon-btn" title="About and privacy" aria-label="About and privacy">
+      <svg viewBox="0 0 24 24" width="22" height="22"><path fill="currentColor" d="M11 7h2v2h-2zm0 4h2v6h-2zm1-9a10 10 0 1 0 0 20a10 10 0 0 0 0-20m0 18a8 8 0 1 1 0-16a8 8 0 0 1 0 16"/></svg>
+    </button>
+    <button id="btn-locate" class="icon-btn" title="My location" aria-label="My location">
+      <svg viewBox="0 0 24 24" width="22" height="22"><path fill="currentColor" d="M12 8a4 4 0 1 0 0 8a4 4 0 0 0 0-8m8.94 3A8.99 8.99 0 0 0 13 3.06V1h-2v2.06A8.99 8.99 0 0 0 3.06 11H1v2h2.06A8.99 8.99 0 0 0 11 20.94V23h2v-2.06A8.99 8.99 0 0 0 20.94 13H23v-2zM12 19a7 7 0 1 1 0-14a7 7 0 0 1 0 14"/></svg>
+    </button>
+  </div>
 </header>
 
 <nav class="chips" id="chips" aria-label="Districts"></nav>
@@ -64,6 +70,61 @@
     <div class="shots-strip" id="shots-strip"></div>
   </div>
 </section>
+
+<!-- about & privacy -->
+<div class="result about" id="about" hidden>
+  <button class="sheet-close" id="about-close" aria-label="Close">×</button>
+  <h2 class="result-title">about &amp; privacy</h2>
+
+  <div class="about-body">
+    <p><b>tallinn cam selfie</b> is a hobby project that turns Tallinn's public
+    traffic cameras into selfie cameras: walk to one, start the countdown, wave.
+    It is not affiliated with the City of Tallinn, Visit Estonia, or Brand Estonia.</p>
+
+    <h3>data sources &amp; credits</h3>
+    <ul>
+      <li><b>Camera images and camera list:</b> served directly from the City of
+        Tallinn's public traffic camera service
+        <a href="https://ristmikud.tallinn.ee" target="_blank" rel="noopener">ristmikud.tallinn.ee</a>
+        (Tallinna Liikuvusamet). Images are fetched by your browser straight from
+        the city's server. This app does not store or redistribute them.</li>
+      <li><b>Map:</b> © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>
+        contributors, licensed under <a href="https://opendatacommons.org/licenses/odbl/" target="_blank" rel="noopener">ODbL</a>.
+        Tiles from openstreetmap.org.</li>
+      <li><b>Camera coordinates:</b> derived from OpenStreetMap data
+        (© OpenStreetMap contributors, ODbL) and from Estonian Land Board
+        (<a href="https://geoportaal.maaamet.ee" target="_blank" rel="noopener">Maa-amet</a>)
+        in-ADS address data, 2026. The coordinate dataset is shared under ODbL.</li>
+      <li><b>Map library:</b> <a href="https://leafletjs.com" target="_blank" rel="noopener">Leaflet</a>,
+        BSD 2-Clause, © Vladimir Agafonkin.</li>
+      <li><b>Typefaces:</b> Aino and Aino Headline by
+        <a href="https://toolbox.estonia.ee/asset-page/252114-aino-typeface" target="_blank" rel="noopener">Brand Estonia</a>
+        (Estonian Business and Innovation Agency), used unmodified under their
+        free licence. Design inspired by visitestonia.com.</li>
+    </ul>
+
+    <h3>privacy</h3>
+    <ul>
+      <li><b>Your location</b> is used only in your browser to show you on the map
+        and compute distances. It is never sent to this app's servers. there are none.</li>
+      <li><b>Your shots</b> are stored only on your device (browser storage).
+        Delete them anytime with the x. Your browser may evict them under storage
+        pressure, so save keepers to your phone.</li>
+      <li><b>No analytics, no tracking, no cookies from this app.</b> Your browser
+        does contact two third parties: openstreetmap.org for map tiles and
+        ristmikud.tallinn.ee for camera images. The city's server may set its own
+        technical cookies; their service, their terms.</li>
+      <li><b>People in the frame:</b> the cameras are the city's public traffic
+        cameras. The city states recordings are kept at least 21 days and can be
+        requested by law enforcement. Use your shots kindly. photograph yourself,
+        not strangers.</li>
+    </ul>
+
+    <h3>source</h3>
+    <p>Code: MIT. Camera dataset: ODbL. Full licence texts and notices:
+      <a href="THIRD-PARTY-NOTICES.txt" target="_blank" rel="noopener">third-party notices</a>.</p>
+  </div>
+</div>
 
 <!-- delete confirmation -->
 <div class="confirm" id="confirm" hidden>
