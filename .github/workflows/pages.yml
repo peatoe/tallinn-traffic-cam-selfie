@@ -22,6 +22,10 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
+      - name: Inject Stadia API key
+        env:
+          STADIA_API_KEY: ${{ secrets.STADIA_API_KEY }}
+        run: sh scripts/build-config.sh
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

@@ -74,7 +74,10 @@ function addOsmFallback() {
 }
 (function addToner() {
   document.body.classList.add("tile-toner");
-  const toner = L.tileLayer("https://tiles.stadiamaps.com/tiles/stamen_toner/{z}/{x}/{y}.png", {
+  const key = (window.APP_CONFIG && window.APP_CONFIG.stadiaApiKey) || "";
+  const tonerUrl = "https://tiles.stadiamaps.com/tiles/stamen_toner/{z}/{x}/{y}.png" +
+    (key ? "?api_key=" + encodeURIComponent(key) : "");
+  const toner = L.tileLayer(tonerUrl, {
     maxZoom: 20,
     attribution: '&copy; <a href="https://stadiamaps.com/">Stadia Maps</a> &copy; <a href="https://stamen.com/">Stamen Design</a> &copy; <a href="https://openmaptiles.org/">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' + CAMS_CREDIT,
   }).addTo(map);

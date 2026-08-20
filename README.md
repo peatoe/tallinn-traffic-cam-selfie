@@ -63,6 +63,24 @@ repository **Settings → Pages → Source: GitHub Actions**. The app then lives
 at `https://<user>.github.io/<repo>/` with HTTPS, which enables geolocation
 and photo persistence on phones.
 
+### Map tiles API key (Stadia Maps)
+
+The map uses Stamen Toner tiles hosted by Stadia Maps. localhost works
+without a key; production needs one (free tier at
+[stadiamaps.com](https://stadiamaps.com/)):
+
+1. Create a Stadia Maps account and an API key. In their dashboard,
+   restrict the key to your domains (e.g. `<user>.github.io`). The key ships
+   in the page source, so the domain restriction is what protects it.
+2. Locally (optional): paste it into `.env` (`STADIA_API_KEY=...`, see
+   `.env.example`) and run `sh scripts/build-config.sh` to generate
+   `app/config.js`. Both files are gitignored.
+3. For deploys: `gh secret set STADIA_API_KEY` (or repository Settings →
+   Secrets and variables → Actions). The workflow injects it at deploy time.
+
+Without a key the deployed app automatically falls back to plain
+OpenStreetMap tiles, so nothing breaks; it just loses the blue toner look.
+
 ## Licences & data sources
 
 Code is MIT (see [LICENSE](LICENSE)). Camera imagery is the City of
