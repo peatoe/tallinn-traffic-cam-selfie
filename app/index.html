@@ -88,9 +88,14 @@
         <a href="https://ristmikud.tallinn.ee" target="_blank" rel="noopener">ristmikud.tallinn.ee</a>
         (Tallinna Liikuvusamet). Images are fetched by your browser straight from
         the city's server. This app does not store or redistribute them.</li>
-      <li><b>Map:</b> © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>
-        contributors, licensed under <a href="https://opendatacommons.org/licenses/odbl/" target="_blank" rel="noopener">ODbL</a>.
-        Tiles from openstreetmap.org.</li>
+      <li><b>Map:</b> Stamen Toner tiles ©
+        <a href="https://stamen.com/" target="_blank" rel="noopener">Stamen Design</a> ©
+        <a href="https://stadiamaps.com/" target="_blank" rel="noopener">Stadia Maps</a> ©
+        <a href="https://openmaptiles.org/" target="_blank" rel="noopener">OpenMapTiles</a> ©
+        <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>
+        contributors (map data under <a href="https://opendatacommons.org/licenses/odbl/" target="_blank" rel="noopener">ODbL</a>),
+        recoloured to this app's blue at display time. Falls back to
+        openstreetmap.org tiles when needed.</li>
       <li><b>Camera coordinates:</b> derived from OpenStreetMap data
         (© OpenStreetMap contributors, ODbL) and from Estonian Land Board
         (<a href="https://geoportaal.maaamet.ee" target="_blank" rel="noopener">Maa-amet</a>)
@@ -157,6 +162,13 @@
     <button class="btn btn-dark" id="btn-done">done</button>
   </div>
 </div>
+
+<!-- duotone filter: maps toner's black to Visit Estonia blue #000087, keeps white -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <filter id="ve-duotone" color-interpolation-filters="sRGB">
+    <feColorMatrix type="matrix" values="1 0 0 0 0  1 0 0 0 0  0.471 0 0 0 0.529  0 0 0 1 0"/>
+  </filter>
+</svg>
 
 <script src="vendor/leaflet.js"></script>
 <script src="app.js"></script>

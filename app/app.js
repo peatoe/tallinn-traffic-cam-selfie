@@ -60,10 +60,33 @@ const shortName = (cam) =>
 const map = L.map("map", { zoomControl: false, attributionControl: true })
   .setView([59.437, 24.754], 12);
 L.control.zoom({ position: "bottomright" }).addTo(map);
-L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
-  maxZoom: 19,
-  attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors · cams: <a href="' + SITE + '">City of Tallinn</a>',
-}).addTo(map);
+
+/* Stamen Toner (hosted by Stadia Maps), recolored black -> Visit Estonia blue
+   by the #ve-duotone SVG filter. Falls back to plain OSM if toner tiles fail
+   (e.g. the domain is not registered with Stadia, or an outage). */
+const CAMS_CREDIT = ' · cams: <a href="' + SITE + '">City of Tallinn</a>';
+function addOsmFallback() {
+  document.body.classList.remove("tile-toner");
+  L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    maxZoom: 19,
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' + CAMS_CREDIT,
+  }).addTo(map);
+}
+(function addToner() {
+  document.body.classList.add("tile-toner");
+  const toner = L.tileLayer("https://tiles.stadiamaps.com/tiles/stamen_toner/{z}/{x}/{y}.png", {
+    maxZoom: 20,
+    attribution: '&copy; <a href="https://stadiamaps.com/">Stadia Maps</a> &copy; <a href="https://stamen.com/">Stamen Design</a> &copy; <a href="https://openmaptiles.org/">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' + CAMS_CREDIT,
+  }).addTo(map);
+  let errors = 0, swapped = false;
+  toner.on("tileerror", () => {
+    if (++errors >= 3 && !swapped) {
+      swapped = true;
+      map.removeLayer(toner);
+      addOsmFallback();
+    }
+  });
+})();
 
 function spotKey(c) { return `${c.lat.toFixed(5)},${c.lng.toFixed(5)}`; }
 

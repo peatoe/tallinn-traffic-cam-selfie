@@ -17,10 +17,16 @@ Transport Department): <https://ristmikud.tallinn.ee>.
   21 days and can be requested by law enforcement.
 - This project is not affiliated with or endorsed by the City of Tallinn.
 
-## Map tiles and geodata: OpenStreetMap
+## Map tiles and geodata: Stamen, Stadia Maps, OpenStreetMap
 
-- Map tiles: © [OpenStreetMap](https://www.openstreetmap.org/copyright)
-  contributors, served from tile.openstreetmap.org under the
+- Primary map tiles: **Stamen Toner** © [Stamen Design](https://stamen.com/)
+  (CC BY 4.0), hosted by and © [Stadia Maps](https://stadiamaps.com/),
+  data © [OpenMapTiles](https://openmaptiles.org/) ©
+  [OpenStreetMap](https://www.openstreetmap.org/copyright) contributors.
+  The app recolours the style's black to Visit Estonia blue with a CSS/SVG
+  filter at display time; the tiles themselves are unmodified.
+- Fallback map tiles (used automatically if Toner tiles are unavailable):
+  © OpenStreetMap contributors, served from tile.openstreetmap.org under the
   [OSMF tile usage policy](https://operations.osmfoundation.org/policies/tiles/).
 - Camera coordinates in `app/data/cameras.json` are in part **derived from
   OpenStreetMap data** (street-intersection matching via the Overpass API).

@@ -89,6 +89,7 @@ body {
 /* ---- map ---- */
 #map { flex: 1; min-height: 0; z-index: 1; background: var(--mist); }
 .leaflet-container { font-family: var(--body); }
+body.tile-toner .leaflet-tile { filter: url(#ve-duotone); }
 .cam-tip {
   font-family: var(--body); font-weight: 700; font-size: 12px;
 }
