@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#ffffff">
+<title>tallinn cam selfie</title>
+<link rel="stylesheet" href="vendor/leaflet.css">
+<link rel="stylesheet" href="style.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📷</text></svg>">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <h1 class="brand-title">tallinn cam selfie</h1>
+    <div class="brand-sub">wave at a traffic camera</div>
+  </div>
+  <button id="btn-locate" class="icon-btn" title="My location" aria-label="My location">
+    <svg viewBox="0 0 24 24" width="22" height="22"><path fill="currentColor" d="M12 8a4 4 0 1 0 0 8a4 4 0 0 0 0-8m8.94 3A8.99 8.99 0 0 0 13 3.06V1h-2v2.06A8.99 8.99 0 0 0 3.06 11H1v2h2.06A8.99 8.99 0 0 0 11 20.94V23h2v-2.06A8.99 8.99 0 0 0 20.94 13H23v-2zM12 19a7 7 0 1 1 0-14a7 7 0 0 1 0 14"/></svg>
+  </button>
+</header>
+
+<nav class="chips" id="chips" aria-label="Districts"></nav>
+
+<main id="map" aria-label="Camera map"></main>
+
+<div class="status" id="status" hidden></div>
+
+<!-- camera detail sheet -->
+<section class="sheet" id="sheet" hidden aria-label="Camera details">
+  <button class="sheet-close" id="sheet-close" aria-label="Close">×</button>
+  <h2 class="sheet-title" id="cam-title">camera</h2>
+  <div class="sheet-meta">
+    <span class="badge" id="cam-area"></span>
+    <span class="dist" id="cam-dist" hidden>
+      <svg id="dist-arrow" viewBox="0 0 24 24" width="15" height="15"><path fill="currentColor" d="M12 2L4.5 20.3l.7.7L12 18l6.8 3l.7-.7z"/></svg>
+      <span id="dist-text"></span>
+    </span>
+  </div>
+
+  <div class="preview">
+    <img id="preview-img" alt="Live camera view" draggable="false">
+    <div class="preview-time" id="preview-time">...</div>
+  </div>
+
+  <div class="actions">
+    <button class="btn btn-primary" id="btn-shot">
+      <span class="btn-ico">📷</span> photo now
+    </button>
+    <button class="btn btn-dark" data-count="10">⏱ 10 s</button>
+    <button class="btn btn-dark" data-count="20">⏱ 20 s</button>
+    <button class="btn btn-dark" data-count="30">⏱ 30 s</button>
+  </div>
+
+  <div class="directions">
+    <span class="directions-label">get there</span>
+    <a class="btn btn-ghost" id="dir-google" target="_blank" rel="noopener">Google Maps</a>
+    <a class="btn btn-ghost" id="dir-apple" target="_blank" rel="noopener">Apple Maps</a>
+  </div>
+
+  <div class="shots" id="shots" hidden>
+    <span class="directions-label">your shots</span>
+    <div class="shots-strip" id="shots-strip"></div>
+  </div>
+</section>
+
+<!-- delete confirmation -->
+<div class="confirm" id="confirm" hidden>
+  <div class="confirm-card">
+    <h2 class="confirm-title">delete this photo?</h2>
+    <div class="confirm-sub">it will be removed from your shots in this browser.</div>
+    <div class="confirm-actions">
+      <button class="btn btn-ghost" id="confirm-no">keep it</button>
+      <button class="btn btn-danger" id="confirm-yes">delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- fullscreen countdown -->
+<div class="countdown" id="countdown" hidden>
+  <div class="countdown-cam" id="countdown-cam"></div>
+  <div class="countdown-num" id="countdown-num">10</div>
+  <div class="countdown-hint">get in front of the camera & wave</div>
+  <button class="btn btn-ghost countdown-cancel" id="countdown-cancel">cancel</button>
+</div>
+
+<!-- photo result -->
+<div class="result" id="result" hidden>
+  <button class="sheet-close" id="result-close" aria-label="Close">×</button>
+  <h2 class="result-title" id="result-title">your photo</h2>
+  <div class="result-grid" id="result-grid"></div>
+  <div class="result-note">saved to <b>your shots</b> on the camera page. they stay in this browser until you delete them.<br>long-press a photo to save it to your phone. frames grabbed a few seconds apart</div>
+  <div class="result-actions">
+    <button class="btn btn-primary" id="btn-again">⏱ again</button>
+    <button class="btn btn-dark" id="btn-done">done</button>
+  </div>
+</div>
+
+<script src="vendor/leaflet.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
