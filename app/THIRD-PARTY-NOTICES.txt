@@ -23,8 +23,8 @@ Transport Department): <https://ristmikud.tallinn.ee>.
   (CC BY 4.0), hosted by and © [Stadia Maps](https://stadiamaps.com/),
   data © [OpenMapTiles](https://openmaptiles.org/) ©
   [OpenStreetMap](https://www.openstreetmap.org/copyright) contributors.
-  The app recolours the style's black to Visit Estonia blue with a CSS/SVG
-  filter at display time; the tiles themselves are unmodified.
+  The app recolours the style's black to Visit Estonia blue on a canvas at
+  display time; the tiles as served are unmodified.
 - Fallback map tiles (used automatically if Toner tiles are unavailable):
   © OpenStreetMap contributors, served from tile.openstreetmap.org under the
   [OSMF tile usage policy](https://operations.osmfoundation.org/policies/tiles/).
@@ -83,7 +83,7 @@ not be modified or used to create logos, wordmarks, or trademarks.
 ## Icons: Brand Estonia
 
 The UI icons (camera, star, picture, loop, clock, exclamation, information,
-target, map, list, coffee, loading) are from the
+target, map, list, coffee, loading, share) are from the
 Brand Estonia icon set, © Estonian Business and Innovation Agency, distributed
 free of charge via the
 [Brand Estonia toolbox](https://toolbox.estonia.ee/document/17). They are
