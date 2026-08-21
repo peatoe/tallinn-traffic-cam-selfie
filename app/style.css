@@ -170,6 +170,16 @@ body.tile-toner .leaflet-tile { filter: url(#ve-duotone); }
   font-size: 12px; font-weight: 700; letter-spacing: .04em;
   border-radius: 999px; padding: 4px 10px; text-transform: lowercase;
 }
+.badge-approx {
+  display: inline-flex; align-items: center; gap: 5px;
+  background: none; border: 1.5px dashed #999; color: #555;
+  padding: 2.5px 9px;
+}
+.approx-note {
+  font-size: 12.5px; line-height: 1.45; color: #444;
+  background: var(--mist); border-radius: 10px;
+  padding: 9px 12px; margin-top: 12px;
+}
 .dist { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 700; color: var(--accent); }
 #dist-arrow { transition: transform .3s; }
 

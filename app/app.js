@@ -160,6 +160,8 @@ function selectSpot(spot, camId) {
 function openSheet(spot, cam) {
   $("cam-title").textContent = shortName(cam);
   $("cam-area").textContent = areaName(cam);
+  $("cam-approx").hidden = !cam.approx;
+  $("approx-note").hidden = !cam.approx;
   updateFavBtn();
 
   /* view switcher for multi-cam spots */
@@ -300,6 +302,11 @@ function renderFavs() {
     badge.className = "badge";
     badge.textContent = areaName(cam);
     meta.appendChild(badge);
+    if (cam.approx) {
+      const ap = document.createElement("span");
+      ap.textContent = "≈ approximate location";
+      meta.appendChild(ap);
+    }
     if (state.user) {
       const d = document.createElement("span");
       d.className = "fav-dist";
