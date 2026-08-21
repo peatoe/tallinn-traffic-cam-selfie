@@ -183,7 +183,7 @@ function selectSpot(spot, camId) {
   openSheet(spot, cam);
   updateLine();
   const target = L.latLng(spot.lat, spot.lng);
-  if (state.user && !userIsFar()) { // a far-away user would make this fit a continent
+  if (state.user && !userIsFar()) { // fitting a far-away user would zoom out past the city
     map.fitBounds(L.latLngBounds([state.user, target]).pad(0.25));
   } else {
     map.setView(target, Math.max(map.getZoom(), 15));
@@ -962,8 +962,7 @@ function showResult(shotList, cam) {
 }
 
 /* ---------- geolocation ---------- */
-/* visitors located far from tallinn get a one-time explainer instead of the
-   map jumping to their city; suppressed when they arrived via a ?cam= link */
+/* far-away visitors get a one-time explainer instead of the map jumping to their city */
 const AWAY_M = 40000;
 const AWAY_KEY = "tcs-away-v1";
 
