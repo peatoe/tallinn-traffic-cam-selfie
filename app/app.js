@@ -15,7 +15,7 @@ const state = {
   sel: null, selSpot: null,
   user: null, userMarker: null, accCircle: null, line: null,
   watching: false, watchId: null,
-  previewTimer: null, wakeLock: null, lastCount: 10,
+  previewTimer: null, wakeLock: null, lastCapture: "now",
 };
 
 /* ---------- helpers ---------- */
@@ -535,6 +535,7 @@ function grabFrame(cam, label) {
 
 async function photoNow() {
   if (!state.sel) return;
+  state.lastCapture = "now";
   const cam = state.sel;
   toast("grabbing the frame…", 1500);
   const frame = await grabFrame(cam, "now");
@@ -572,7 +573,7 @@ let countdownAbort = null;
 async function countdownPhoto(seconds) {
   if (!state.sel) return;
   const cam = state.sel;
-  state.lastCount = seconds;
+  state.lastCapture = seconds;
   const overlay = $("countdown"), num = $("countdown-num");
   $("countdown-cam").textContent = shortName(cam);
   overlay.classList.remove("flash");
@@ -737,7 +738,11 @@ $("countdown-cancel").onclick = () => {
 };
 $("result-close").onclick = () => closeResult(true);
 $("btn-done").onclick = () => closeResult(true);
-$("btn-again").onclick = () => { $("result").hidden = true; countdownPhoto(state.lastCount); };
+$("btn-again").onclick = () => {
+  $("result").hidden = true;
+  if (state.lastCapture === "now") photoNow();
+  else countdownPhoto(state.lastCapture);
+};
 
 $("btn-fav").onclick = () => {
   if (!state.sel) return;

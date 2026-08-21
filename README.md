@@ -43,7 +43,7 @@ Useful URL params: `?at=59.449,24.735` fakes your location (desktop testing),
   one junction has several cameras. Cameras with `"approx": true` coordinates
   show a "location approximate" badge and a note next to directions.
 - **photo now**: grabs the current frame.
-- **Countdown photo** (10/20/30 s): fullscreen countdown with huge digits
+- **Countdown photo** (5/10/30 s): fullscreen countdown with huge digits
   readable from across the street, beeps, screen wake-lock, then a "smile!"
   flash and a 3-frame burst (at zero / +4 s / +8 s) since the cameras refresh
   every few seconds.
