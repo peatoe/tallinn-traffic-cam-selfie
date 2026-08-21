@@ -42,9 +42,13 @@ Useful URL params: `?at=59.449,24.735` fakes your location (desktop testing),
 - **List view**: an iOS-style toggle in the nav switches the map for a
   scrollable grid of live feeds (nearest first when located, alphabetical
   otherwise) with district, distance, and a favorite star on each card. The
-  chosen view is remembered. Thumbnails lazy-load and refresh every 30 s in
-  batches of 50, only while the list is visible and the camera sheet is
-  closed; on-screen cards swap in the new frame only after it has loaded.
+  chosen view is remembered. On open every feed loads once through a bounded
+  queue (24 concurrent, nearest first, in-flight loads never aborted); after
+  that only on-screen cards refresh every 30 s, and a stale card tops up the
+  moment it scrolls into view. New frames swap in only after they've loaded,
+  hung loads restart via a watchdog, and a feed that fails three times shows
+  "no signal" instead of spinning (still retried while visible). Off-screen
+  cards skip rendering entirely (content-visibility).
 - **Camera page**: live preview (5 s refresh), distance + compass bearing,
   walking directions handoff to Google/Apple Maps, multi-view switcher where
   one junction has several cameras. Cameras with `"approx": true` coordinates

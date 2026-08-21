@@ -363,17 +363,31 @@ function setView(v) {
   $("view-list").classList.toggle("on", v === "list");
   $("view-map").setAttribute("aria-pressed", String(v === "map"));
   $("view-list").setAttribute("aria-pressed", String(v === "list"));
-  if (v === "list") { state.listTs = Date.now(); renderList(); startListRefresh(); }
+  if (v === "list") { renderList(); startListRefresh(); }
   else stopListRefresh();
   $("list").hidden = v !== "list";
 }
 
-/* live refresh: every 30 s, in batches of 50 feeds, only while the list is in use */
+/* ---------- list feed loading ----------
+   A bounded-concurrency loader instead of timed batches. Rules:
+   - an in-flight load is never aborted (that was how feeds got stuck);
+     only a load hung past LIST_STALL_MS is restarted, once per tick
+   - on open, every camera queues once, nearest first
+   - the 30 s tick refreshes only what is on screen; off-screen frames are
+     topped up the moment they scroll in (old frame stays until the new
+     one has arrived, so nothing blanks)
+   - a feed that fails LIST_DEAD_AFTER times shows "no signal" instead of
+     spinning forever, and still retries while visible */
 const LIST_REFRESH_MS = 30000;
-const LIST_BATCH = 50;
-const LIST_BATCH_GAP_MS = 2000;
+const LIST_MAX_INFLIGHT = 24;
+const LIST_STALL_MS = 25000;
+const LIST_DEAD_AFTER = 3;
+
 let listRefreshTimer = null;
-let listRefreshBusy = false;
+let listIO = null;
+const feedQueue = [];          // {im, swap}; front = loads next
+let feedInflight = 0;
+const feedVisible = new Set(); // imgs currently intersecting the viewport
 
 function startListRefresh() {
   stopListRefresh();
@@ -384,43 +398,129 @@ function stopListRefresh() {
   listRefreshTimer = null;
 }
 
-async function refreshListFeeds() {
-  if (listRefreshBusy || document.hidden || state.view !== "list") return;
-  if (state.sel) return; // camera sheet is on top; its live preview has priority
-  listRefreshBusy = true;
-  const ts = Date.now();
-  const imgs = [...document.querySelectorAll("#list .cam-card-img img")];
-  try {
-    for (let i = 0; i < imgs.length; i += LIST_BATCH) {
-      if (document.hidden || state.view !== "list") break;
-      for (const im of imgs.slice(i, i + LIST_BATCH)) refreshFeedImg(im, ts);
-      if (i + LIST_BATCH < imgs.length) await new Promise(r => setTimeout(r, LIST_BATCH_GAP_MS));
+function feedSt(im) {
+  if (!im._feed) im._feed = { status: "idle", ts: 0, startedAt: 0, attempts: 0, queued: false, counted: false, token: 0 };
+  return im._feed;
+}
+
+function enqueueFeed(im, { swap = false, front = false } = {}) {
+  const st = feedSt(im);
+  if (st.queued || st.status === "loading" || !im.isConnected) return;
+  st.queued = true;
+  if (front) feedQueue.unshift({ im, swap }); else feedQueue.push({ im, swap });
+  pumpFeeds();
+}
+
+function pumpFeeds() {
+  while (feedInflight < LIST_MAX_INFLIGHT && feedQueue.length) {
+    const { im, swap } = feedQueue.shift();
+    const st = feedSt(im);
+    st.queued = false;
+    if (!im.isConnected || state.view !== "list") continue;
+    const token = ++st.token;
+    st.status = "loading";
+    st.startedAt = Date.now();
+    st.counted = true;
+    feedInflight++;
+    const url = imgUrl(im.dataset.camId, Date.now());
+    const settle = (ok) => {
+      if (st.token !== token) return; // superseded by a stall restart
+      if (st.counted) { feedInflight--; st.counted = false; }
+      settleFeed(im, ok);
+      pumpFeeds();
+    };
+    if (swap) {
+      const pre = new Image(); // keep the old frame painted until the new one is in
+      pre.onload = () => { if (st.token === token) { im.onload = im.onerror = null; im.src = pre.src; } settle(true); };
+      pre.onerror = () => settle(false);
+      pre.src = url;
+    } else {
+      im.onload = () => { im.onload = im.onerror = null; settle(true); };
+      im.onerror = () => { im.onload = im.onerror = null; settle(false); };
+      im.src = url;
     }
-  } finally {
-    listRefreshBusy = false;
   }
 }
 
-function refreshFeedImg(im, ts) {
-  const url = imgUrl(im.dataset.camId, ts);
-  const r = im.getBoundingClientRect();
-  const inView = r.bottom > 0 && r.top < window.innerHeight;
-  if (!inView || !im.complete || !im.naturalWidth) {
-    im.src = url; // offscreen: loading=lazy defers the fetch until scrolled to
-    return;
+function settleFeed(im, ok) {
+  const st = feedSt(im);
+  const wrap = im.parentElement;
+  if (ok) {
+    st.status = "loaded"; st.ts = Date.now(); st.attempts = 0;
+    im.style.visibility = "";
+    if (wrap) { wrap.classList.add("loaded"); wrap.classList.remove("dead"); }
+  } else {
+    st.status = "error"; st.attempts++;
+    im.style.visibility = "hidden";
+    if (wrap) {
+      wrap.classList.remove("loaded");
+      if (st.attempts >= LIST_DEAD_AFTER) wrap.classList.add("dead");
+    }
   }
-  const pre = new Image(); // onscreen: swap only once the new frame is here, no flicker
-  pre.onload = () => { im.src = pre.src; };
-  pre.src = url;
 }
+
+/* a re-render carries an already-loaded frame over so the card never re-spins */
+function carryFeed(im, prevSrc) {
+  const st = feedSt(im);
+  st.status = "loaded";
+  st.ts = Number(new URLSearchParams(prevSrc.split("?")[1] || "").get("t")) || Date.now();
+  im.src = prevSrc; // instant, from cache
+  im.parentElement.classList.add("loaded");
+}
+
+function setupListIO() {
+  if (listIO) listIO.disconnect();
+  feedVisible.clear();
+  listIO = new IntersectionObserver((entries) => {
+    for (const e of entries) {
+      const im = e.target;
+      const st = feedSt(im);
+      if (!e.isIntersecting) { feedVisible.delete(im); continue; }
+      feedVisible.add(im);
+      if (st.status === "idle" || st.status === "error") enqueueFeed(im, { front: true });
+      else if (st.status === "loaded" && Date.now() - st.ts > LIST_REFRESH_MS) enqueueFeed(im, { swap: true, front: true });
+    }
+  }, { root: $("list"), rootMargin: "200px 0px" });
+}
+
+function refreshListFeeds() {
+  if (document.hidden || state.view !== "list") return;
+  if (state.sel) return; // camera sheet is on top; its live preview has priority
+  const now = Date.now();
+  for (const im of feedVisible) {
+    const st = feedSt(im);
+    if (st.status === "loaded" && now - st.ts >= LIST_REFRESH_MS - 500) enqueueFeed(im, { swap: true, front: true });
+    else if (st.status === "error") enqueueFeed(im, { front: true });
+  }
+  /* watchdog: restart anything hung, wherever it is, at most once per tick */
+  for (const im of $("list").querySelectorAll(".cam-card-img img")) {
+    const st = feedSt(im);
+    if (st.status === "loading" && now - st.startedAt > LIST_STALL_MS) {
+      if (st.counted) { feedInflight--; st.counted = false; }
+      st.token++; // orphan the hung load's callbacks
+      st.status = "idle";
+      enqueueFeed(im, { front: feedVisible.has(im) });
+    }
+  }
+  pumpFeeds();
+}
+
+document.addEventListener("visibilitychange", () => {
+  if (!document.hidden && state.view === "list") refreshListFeeds();
+});
 
 function renderList() {
   const box = $("list");
+  /* keep already-loaded frames across a re-render (e.g. the nearest-first re-sort) */
+  const prevSrcs = new Map(
+    [...box.querySelectorAll(".cam-card-img img")]
+      .filter(im => im.getAttribute("src") && feedSt(im).status === "loaded")
+      .map(im => [im.dataset.camId, im.src]));
   box.innerHTML = "";
+  setupListIO(); // drops the old observer and visibility set; stale queue entries fall out via isConnected
   listStars.clear();
   listDists.clear();
   state.listSortedByDist = !!state.user;
-  const ts = state.listTs || Date.now();
   const cams = [...state.cams].sort((a, b) =>
     state.user
       ? haversine(state.user, a) - haversine(state.user, b)
@@ -436,14 +536,14 @@ function renderList() {
     spin.className = "cam-loading";
     spin.innerHTML = '<svg class="ico" width="26" height="26" aria-hidden="true"><use href="#i-loading"/></svg>';
     imgWrap.appendChild(spin);
+    const dead = document.createElement("div");
+    dead.className = "cam-dead";
+    dead.innerHTML = '<svg class="ico" width="7" height="14" aria-hidden="true"><use href="#i-exclaim"/></svg><span>no signal</span>';
+    imgWrap.appendChild(dead);
     const im = document.createElement("img");
-    im.src = imgUrl(cam.id, ts);
     im.alt = cam.name;
-    im.loading = "lazy";
     im.decoding = "async";
     im.dataset.camId = cam.id;
-    im.onload = () => { im.style.visibility = ""; imgWrap.classList.add("loaded"); };
-    im.onerror = () => { im.style.visibility = "hidden"; imgWrap.classList.remove("loaded"); }; // spinner returns; a later refresh can revive it
     imgWrap.appendChild(im);
 
     const star = document.createElement("button");
@@ -484,6 +584,11 @@ function renderList() {
     card.appendChild(name);
     card.appendChild(meta);
     box.appendChild(card);
+
+    const prev = prevSrcs.get(cam.id);
+    if (prev) carryFeed(im, prev);
+    else enqueueFeed(im); // DOM order = nearest first, so the top loads first
+    listIO.observe(im);
   }
 }
 

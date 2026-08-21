@@ -107,7 +107,20 @@ body {
   grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
   gap: 14px 12px; align-content: start;
 }
-.cam-card { cursor: pointer; }
+.cam-card {
+  cursor: pointer;
+  content-visibility: auto; /* offscreen cards skip layout and paint */
+  contain-intrinsic-size: auto 180px;
+}
+.cam-dead {
+  position: absolute; inset: 0;
+  display: none; place-items: center; align-content: center;
+  gap: 5px; color: #98a2a9;
+  font-size: 10px; font-weight: 700; letter-spacing: .06em;
+  text-transform: lowercase;
+}
+.cam-card-img.dead .cam-dead { display: grid; }
+.cam-card-img.dead .cam-loading { display: none; }
 .cam-card-img {
   position: relative; aspect-ratio: 16/9;
   background: var(--mist); border: 1px solid var(--line);
