@@ -73,8 +73,9 @@ function fmtWhen(when) {
 }
 
 /* ---------- map ---------- */
+const TLL_CENTER = L.latLng(59.437, 24.754), TLL_ZOOM = 12;
 const map = L.map("map", { zoomControl: false, attributionControl: true })
-  .setView([59.437, 24.754], 12);
+  .setView(TLL_CENTER, TLL_ZOOM);
 L.control.zoom({ position: "bottomright" }).addTo(map);
 
 /* Stamen Toner (hosted by Stadia Maps), recolored black -> Visit Estonia blue.
@@ -182,10 +183,10 @@ function selectSpot(spot, camId) {
   openSheet(spot, cam);
   updateLine();
   const target = L.latLng(spot.lat, spot.lng);
-  if (state.user && !userIsFar()) {
+  if (state.user && !userIsFar()) { // a far-away user would make this fit a continent
     map.fitBounds(L.latLngBounds([state.user, target]).pad(0.25));
   } else {
-    map.setView(target, Math.max(map.getZoom(), 15)); // don't fit a continent-wide line
+    map.setView(target, Math.max(map.getZoom(), 15));
   }
 }
 
@@ -963,7 +964,6 @@ function showResult(shotList, cam) {
 /* ---------- geolocation ---------- */
 /* visitors located far from tallinn get a one-time explainer instead of the
    map jumping to their city; suppressed when they arrived via a ?cam= link */
-const TLL_CENTER = L.latLng(59.437, 24.754);
 const AWAY_M = 40000;
 const AWAY_KEY = "tcs-away-v1";
 
@@ -972,11 +972,11 @@ function userIsFar() {
 }
 
 function maybeShowAway() {
-  if (!userIsFar() || state.awaySuppressed) return;
+  if (!userIsFar() || new URLSearchParams(location.search).get("cam")) return;
   try {
     if (sessionStorage.getItem(AWAY_KEY)) return;
     sessionStorage.setItem(AWAY_KEY, "1");
-  } catch (e) { /* still show it, just maybe again next reload */ }
+  } catch { /* still show it, just maybe again next reload */ }
   $("away").hidden = false;
 }
 
@@ -986,7 +986,7 @@ function onPosition(lat, lng, acc) {
     const icon = L.divIcon({ className: "", html: '<div class="user-dot"></div>', iconSize: [18, 18], iconAnchor: [9, 9] });
     state.userMarker = L.marker(state.user, { icon, zIndexOffset: 900 }).addTo(map);
     state.accCircle = L.circle(state.user, { radius: acc || 0, color: "#000087", weight: 1, opacity: .4, fillOpacity: .08 }).addTo(map);
-    if (!userIsFar()) map.setView(state.user, 14); // far away: stay on tallinn
+    if (!userIsFar()) map.setView(state.user, 14);
     maybeShowAway();
   } else {
     state.userMarker.setLatLng(state.user);
@@ -1006,7 +1006,7 @@ function startLocating() {
   if (!("geolocation" in navigator)) { toast("geolocation is not available in this browser"); return; }
   if (!window.isSecureContext) { toast("location needs https (or localhost)"); return; }
   if (state.watching) {
-    map.setView(state.user || map.getCenter(), 15);
+    map.setView(state.user || map.getCenter(), 15); // explicit tap: go to the user even when far from tallinn
     return;
   }
   state.watching = true;
@@ -1032,18 +1032,19 @@ async function boot() {
     const skipped = data.cams.length - state.cams.length;
     buildSpots();
     renderMarkers();
-    try { localStorage.removeItem(VIEW_KEY); } catch (e) { /* old cross-visit pref */ }
-    if (sessionStorage.getItem(VIEW_KEY) === "list") setView("list"); // this visit only
+    try {
+      localStorage.removeItem(VIEW_KEY); // old cross-visit pref
+      if (sessionStorage.getItem(VIEW_KEY) === "list") setView("list");
+    } catch { /* storage blocked */ }
     toast(`${state.cams.length} cameras on the map${skipped ? ` (${skipped} without a location)` : ""}`);
   } catch (e) {
     toast("could not load camera data");
     console.error(e);
   }
   updateNavCounts();
+  startLocating();
 
   const camParam = new URLSearchParams(location.search).get("cam");
-  state.awaySuppressed = !!camParam; // arrived via a shared camera link: no greeting
-  startLocating();
   if (camParam) {
     const c = state.cams.find(x => x.id === camParam);
     if (c) selectSpot(state.spots.get(spotKey(c)), c.id);
@@ -1120,10 +1121,12 @@ $("btn-fav").onclick = () => {
 };
 $("view-map").onclick = () => setView("map");
 $("view-list").onclick = () => setView("list");
-$("away-continue").onclick = () => {
+function closeAway() {
   $("away").hidden = true;
-  map.setView(TLL_CENTER, 12);
-};
+  map.setView(TLL_CENTER, TLL_ZOOM);
+}
+$("away-continue").onclick = closeAway;
+$("away").onclick = (e) => { if (e.target === $("away")) closeAway(); };
 $("nav-favs").onclick = () => { renderFavs(); $("favs").hidden = false; };
 $("favs-close").onclick = () => { $("favs").hidden = true; };
 $("nav-gallery").onclick = () => { renderGallery(); $("gallery").hidden = false; };

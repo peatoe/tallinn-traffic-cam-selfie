@@ -6,6 +6,12 @@
       "runtimeExecutable": "python3",
       "runtimeArgs": ["-m", "http.server", "8123", "--directory", "app"],
       "port": 8123
+    },
+    {
+      "name": "cam-app-2",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["-m", "http.server", "8124", "--directory", "app"],
+      "port": 8124
     }
   ]
 }
