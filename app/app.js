@@ -394,7 +394,7 @@ const listDists = new Map(); // camId -> distance span in the list
 
 function setView(v) {
   state.view = v;
-  try { localStorage.setItem(VIEW_KEY, v); } catch { /* full */ }
+  try { sessionStorage.setItem(VIEW_KEY, v); } catch { /* full */ }
   $("view-map").classList.toggle("on", v === "map");
   $("view-list").classList.toggle("on", v === "list");
   $("view-map").setAttribute("aria-pressed", String(v === "map"));
@@ -1032,7 +1032,8 @@ async function boot() {
     const skipped = data.cams.length - state.cams.length;
     buildSpots();
     renderMarkers();
-    if (localStorage.getItem(VIEW_KEY) === "list") setView("list");
+    try { localStorage.removeItem(VIEW_KEY); } catch (e) { /* old cross-visit pref */ }
+    if (sessionStorage.getItem(VIEW_KEY) === "list") setView("list"); // this visit only
     toast(`${state.cams.length} cameras on the map${skipped ? ` (${skipped} without a location)` : ""}`);
   } catch (e) {
     toast("could not load camera data");
