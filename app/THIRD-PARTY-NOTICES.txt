@@ -83,7 +83,7 @@ not be modified or used to create logos, wordmarks, or trademarks.
 ## Icons: Brand Estonia
 
 The UI icons (camera, star, picture, loop, clock, exclamation, information,
-target, map, list, coffee) are from the
+target, map, list, coffee, loading) are from the
 Brand Estonia icon set, © Estonian Business and Innovation Agency, distributed
 free of charge via the
 [Brand Estonia toolbox](https://toolbox.estonia.ee/document/17). They are

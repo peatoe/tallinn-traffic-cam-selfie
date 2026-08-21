@@ -363,8 +363,55 @@ function setView(v) {
   $("view-list").classList.toggle("on", v === "list");
   $("view-map").setAttribute("aria-pressed", String(v === "map"));
   $("view-list").setAttribute("aria-pressed", String(v === "list"));
-  if (v === "list") { state.listTs = Date.now(); renderList(); }
+  if (v === "list") { state.listTs = Date.now(); renderList(); startListRefresh(); }
+  else stopListRefresh();
   $("list").hidden = v !== "list";
+}
+
+/* live refresh: every 30 s, in batches of 50 feeds, only while the list is in use */
+const LIST_REFRESH_MS = 30000;
+const LIST_BATCH = 50;
+const LIST_BATCH_GAP_MS = 2000;
+let listRefreshTimer = null;
+let listRefreshBusy = false;
+
+function startListRefresh() {
+  stopListRefresh();
+  listRefreshTimer = setInterval(refreshListFeeds, LIST_REFRESH_MS);
+}
+function stopListRefresh() {
+  clearInterval(listRefreshTimer);
+  listRefreshTimer = null;
+}
+
+async function refreshListFeeds() {
+  if (listRefreshBusy || document.hidden || state.view !== "list") return;
+  if (state.sel) return; // camera sheet is on top; its live preview has priority
+  listRefreshBusy = true;
+  const ts = Date.now();
+  const imgs = [...document.querySelectorAll("#list .cam-card-img img")];
+  try {
+    for (let i = 0; i < imgs.length; i += LIST_BATCH) {
+      if (document.hidden || state.view !== "list") break;
+      for (const im of imgs.slice(i, i + LIST_BATCH)) refreshFeedImg(im, ts);
+      if (i + LIST_BATCH < imgs.length) await new Promise(r => setTimeout(r, LIST_BATCH_GAP_MS));
+    }
+  } finally {
+    listRefreshBusy = false;
+  }
+}
+
+function refreshFeedImg(im, ts) {
+  const url = imgUrl(im.dataset.camId, ts);
+  const r = im.getBoundingClientRect();
+  const inView = r.bottom > 0 && r.top < window.innerHeight;
+  if (!inView || !im.complete || !im.naturalWidth) {
+    im.src = url; // offscreen: loading=lazy defers the fetch until scrolled to
+    return;
+  }
+  const pre = new Image(); // onscreen: swap only once the new frame is here, no flicker
+  pre.onload = () => { im.src = pre.src; };
+  pre.src = url;
 }
 
 function renderList() {
@@ -385,12 +432,18 @@ function renderList() {
 
     const imgWrap = document.createElement("div");
     imgWrap.className = "cam-card-img";
+    const spin = document.createElement("div");
+    spin.className = "cam-loading";
+    spin.innerHTML = '<svg class="ico" width="26" height="26" aria-hidden="true"><use href="#i-loading"/></svg>';
+    imgWrap.appendChild(spin);
     const im = document.createElement("img");
     im.src = imgUrl(cam.id, ts);
     im.alt = cam.name;
     im.loading = "lazy";
     im.decoding = "async";
-    im.onerror = () => { im.remove(); };
+    im.dataset.camId = cam.id;
+    im.onload = () => { im.style.visibility = ""; imgWrap.classList.add("loaded"); };
+    im.onerror = () => { im.style.visibility = "hidden"; imgWrap.classList.remove("loaded"); }; // spinner returns; a later refresh can revive it
     imgWrap.appendChild(im);
 
     const star = document.createElement("button");
@@ -874,5 +927,5 @@ if ("serviceWorker" in navigator && window.isSecureContext) {
 boot();
 
 /* debug hooks (harmless in production) */
-window.dbg = { state, selectSpot, map, spotKey };
+window.dbg = { state, selectSpot, map, spotKey, refreshListFeeds };
 window.addEventListener("error", (e) => { window.__lastErr = String(e.error || e.message); });
