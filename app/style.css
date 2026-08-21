@@ -82,9 +82,13 @@ body {
   border: 1.5px solid var(--ink); border-radius: 999px;
   background: var(--paper); color: var(--ink);
   padding: 7px 14px; white-space: nowrap; cursor: pointer;
+  display: inline-flex; align-items: center; gap: 7px;
   transition: background .15s, color .15s, border-color .15s;
 }
 .chip.on { background: var(--ink); color: #fff; }
+.ico { display: block; flex: 0 0 auto; }
+/* optical centering: lowercase text sits low in its box, nudge icons to match */
+.chip .ico, .badge .ico, .btn .ico { position: relative; top: 1px; }
 
 /* ---- map ---- */
 #map { flex: 1; min-height: 0; z-index: 1; background: var(--mist); }
@@ -127,7 +131,6 @@ body.tile-toner .leaflet-tile { filter: url(#ve-duotone); }
 .btn-primary { background: var(--accent); color: #fff; }
 .btn-dark { background: var(--ink); color: #fff; }
 .btn-ghost { background: var(--paper); color: var(--ink); border-color: var(--ink); }
-.btn-ico { font-size: 18px; }
 
 /* ---- camera sheet ---- */
 .sheet {
