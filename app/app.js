@@ -12,7 +12,7 @@ const AREAS = {
 const $ = (id) => document.getElementById(id);
 const state = {
   cams: [], spots: new Map(), markers: new Map(),
-  filter: "ALL", sel: null, selSpot: null,
+  sel: null, selSpot: null,
   user: null, userMarker: null, accCircle: null, line: null,
   watching: false, watchId: null,
   previewTimer: null, wakeLock: null, lastCount: 10,
@@ -55,6 +55,22 @@ function viewLabel(cam, i) {
 }
 const shortName = (cam) =>
   cam.name.replace(/\s*\([^)]*\)\s*/g, " ").replace(/\s+/g, " ").trim().toLowerCase();
+
+/* name + view direction, for lists where cameras stand alone */
+const camLabel = (cam) =>
+  /\(/.test(cam.name) ? `${shortName(cam)} (${viewLabel(cam, 0)})` : shortName(cam);
+
+function areaName(cam) {
+  const letters = cam.areas.filter(a => /^[A-Z]+$/.test(a));
+  const tag = letters.find(a => !["P", "ST"].includes(a)) || letters[0] || cam.areas[0];
+  return AREAS[tag] || String(tag).toLowerCase();
+}
+
+function fmtWhen(when) {
+  const d = when instanceof Date ? when : new Date(when);
+  return d.toLocaleDateString("et-EE", { day: "2-digit", month: "2-digit" }) + " " +
+    d.toLocaleTimeString("et-EE", { hour: "2-digit", minute: "2-digit" });
+}
 
 /* ---------- map ---------- */
 const map = L.map("map", { zoomControl: false, attributionControl: true })
@@ -115,12 +131,10 @@ function renderMarkers() {
   for (const m of state.markers.values()) m.remove();
   state.markers.clear();
   for (const spot of state.spots.values()) {
-    const cams = spot.cams.filter(c => state.filter === "ALL" || c.areas.includes(state.filter));
-    if (!cams.length) continue;
     const on = state.selSpot === spot.key;
     const m = L.circleMarker([spot.lat, spot.lng], markerStyle(on))
       .addTo(map)
-      .bindTooltip(shortName(cams[0]), { className: "cam-tip", direction: "top", offset: [0, -8] })
+      .bindTooltip(shortName(spot.cams[0]), { className: "cam-tip", direction: "top", offset: [0, -8] })
       .on("click", () => selectSpot(spot));
     state.markers.set(spot.key, m);
   }
@@ -145,9 +159,10 @@ function selectSpot(spot, camId) {
 
 function openSheet(spot, cam) {
   $("cam-title").textContent = shortName(cam);
-  const letters = cam.areas.filter(a => /^[A-Z]+$/.test(a));
-  const areaTag = letters.find(a => !["P", "ST"].includes(a)) || letters[0] || cam.areas[0];
-  $("cam-area").textContent = AREAS[areaTag] || String(areaTag).toLowerCase();
+  $("cam-area").textContent = areaName(cam);
+  $("cam-approx").hidden = !cam.approx;
+  $("approx-note").hidden = !cam.approx;
+  updateFavBtn();
 
   /* view switcher for multi-cam spots */
   let sw = document.getElementById("view-switch");
@@ -226,6 +241,101 @@ function stopPreview() {
   state.previewTimer = null;
 }
 
+/* ---------- favorites (persisted in the browser) ---------- */
+const FAVS_KEY = "tcs-favs-v1";
+
+function loadFavs() {
+  try { return JSON.parse(localStorage.getItem(FAVS_KEY)) || []; }
+  catch { return []; }
+}
+function saveFavs() {
+  try { localStorage.setItem(FAVS_KEY, JSON.stringify(favs)); } catch { /* full */ }
+}
+let favs = loadFavs(); // [camId, newest first]
+
+const isFav = (id) => favs.includes(id);
+
+function updateFavBtn() {
+  const b = $("btn-fav");
+  const on = !!state.sel && isFav(state.sel.id);
+  b.classList.toggle("on", on);
+  b.setAttribute("aria-pressed", String(on));
+  b.title = on ? "Remove from favorites" : "Save to favorites";
+  b.setAttribute("aria-label", b.title);
+}
+
+function toggleFav(id) {
+  if (isFav(id)) favs = favs.filter(f => f !== id);
+  else favs.unshift(id);
+  saveFavs();
+  updateFavBtn();
+  updateNavCounts();
+  if (!$("favs").hidden) renderFavs();
+}
+
+function renderFavs() {
+  const list = $("favs-list");
+  list.innerHTML = "";
+  const cams = favs.map(id => state.cams.find(c => c.id === id)).filter(Boolean);
+  if (!cams.length) {
+    const p = document.createElement("p");
+    p.className = "empty-note";
+    p.textContent = "no favorites yet. open a camera on the map and tap the star to keep it here for later.";
+    list.appendChild(p);
+    return;
+  }
+  for (const cam of cams) {
+    const row = document.createElement("div");
+    row.className = "fav-row";
+    row.tabIndex = 0;
+    row.setAttribute("role", "button");
+    row.setAttribute("aria-label", `Open ${shortName(cam)}`);
+
+    const main = document.createElement("div");
+    main.className = "fav-main";
+    const name = document.createElement("div");
+    name.className = "fav-name";
+    name.textContent = camLabel(cam);
+    const meta = document.createElement("div");
+    meta.className = "fav-meta";
+    const badge = document.createElement("span");
+    badge.className = "badge";
+    badge.textContent = areaName(cam);
+    meta.appendChild(badge);
+    if (cam.approx) {
+      const ap = document.createElement("span");
+      ap.textContent = "≈ approximate location";
+      meta.appendChild(ap);
+    }
+    if (state.user) {
+      const d = document.createElement("span");
+      d.className = "fav-dist";
+      d.textContent = `${fmtDist(haversine(state.user, cam))} ${compass(bearing(state.user, cam))}`;
+      meta.appendChild(d);
+    }
+    main.appendChild(name);
+    main.appendChild(meta);
+
+    const rm = document.createElement("button");
+    rm.className = "fav-remove";
+    rm.title = "Remove from favorites";
+    rm.setAttribute("aria-label", "Remove from favorites");
+    rm.innerHTML = '<svg class="ico" width="20" height="20" aria-hidden="true"><use href="#i-star"/></svg>';
+    rm.onclick = (e) => { e.stopPropagation(); toggleFav(cam.id); };
+
+    const go = () => {
+      $("favs").hidden = true;
+      selectSpot(state.spots.get(spotKey(cam)), cam.id);
+    };
+    row.onclick = go;
+    row.onkeydown = (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(); } };
+
+    row.appendChild(main);
+    row.appendChild(rm);
+    list.appendChild(row);
+  }
+}
+
 /* ---------- shots (persisted in the browser) ----------
    metadata -> localStorage; pixels -> Cache Storage (opaque responses),
    served back after refresh by sw.js under shots/<sid>              */
@@ -286,6 +396,8 @@ async function confirmDelete(sid, after) {
   if (await askConfirm()) {
     await deleteShot(sid);
     renderShots();
+    if (!$("gallery").hidden) renderGallery();
+    updateNavCounts();
     if (after) after();
   }
 }
@@ -298,6 +410,7 @@ async function addShot(url, cam, label) {
   shots.unshift(shot);
   saveShots(shots);
   renderShots();
+  updateNavCounts();
   return shot;
 }
 
@@ -310,12 +423,9 @@ function makeShotX(sid, small, after) {
   return x;
 }
 
-function renderShots() {
-  const strip = $("shots-strip");
-  strip.innerHTML = "";
-  const mine = shots.filter(s => state.sel && s.camId === state.sel.id);
-  $("shots").hidden = mine.length === 0;
-  for (const s of mine.slice(0, 20)) {
+/* one side-scrolling strip of thumbnails; used by the sheet and the gallery */
+function fillStrip(strip, list, withWhen) {
+  for (const s of list) {
     const wrap = document.createElement("div");
     wrap.className = "shot-thumb";
     const im = document.createElement("img");
@@ -327,8 +437,22 @@ function renderShots() {
     im.onerror = () => { wrap.remove(); };
     wrap.appendChild(im);
     wrap.appendChild(makeShotX(s.sid, true));
+    if (withWhen) {
+      const t = document.createElement("div");
+      t.className = "shot-when";
+      t.textContent = fmtWhen(s.when);
+      wrap.appendChild(t);
+    }
     strip.appendChild(wrap);
   }
+}
+
+function renderShots() {
+  const strip = $("shots-strip");
+  strip.innerHTML = "";
+  const mine = shots.filter(s => state.sel && s.camId === state.sel.id);
+  $("shots").hidden = mine.length === 0;
+  fillStrip(strip, mine.slice(0, 20), false);
 }
 
 function pulseShots() {
@@ -336,6 +460,66 @@ function pulseShots() {
   if (el.hidden) return;
   el.classList.remove("flash"); void el.offsetWidth; el.classList.add("flash");
   el.scrollIntoView({ behavior: "smooth", block: "nearest" });
+}
+
+/* ---------- gallery (all photos, grouped by camera) ---------- */
+function renderGallery() {
+  const body = $("gal-body");
+  body.innerHTML = "";
+  if (!shots.length) {
+    const p = document.createElement("p");
+    p.className = "empty-note";
+    p.textContent = "no photos yet. pick a camera on the map, walk there, start a countdown, wave.";
+    body.appendChild(p);
+    return;
+  }
+  const groups = new Map(); // camId -> shots, newest first; section order = newest shot first
+  for (const s of shots) {
+    if (!groups.has(s.camId)) groups.set(s.camId, []);
+    groups.get(s.camId).push(s);
+  }
+  for (const [camId, list] of groups) {
+    const cam = state.cams.find(c => c.id === camId);
+    const sec = document.createElement("section");
+    sec.className = "gal-sec";
+
+    const h = document.createElement("button");
+    h.className = "gal-cam";
+    if (cam) {
+      h.textContent = `${camLabel(cam)} ›`;
+      h.title = "Open this camera";
+      h.onclick = () => {
+        $("gallery").hidden = true;
+        selectSpot(state.spots.get(spotKey(cam)), cam.id);
+      };
+    } else {
+      h.textContent = `camera ${camId} (no longer listed)`;
+      h.disabled = true;
+      h.classList.add("gal-cam-off");
+    }
+
+    const meta = document.createElement("div");
+    meta.className = "gal-meta";
+    meta.textContent = `${list.length} ${list.length === 1 ? "photo" : "photos"}`;
+
+    const strip = document.createElement("div");
+    strip.className = "shots-strip";
+    fillStrip(strip, list, true);
+
+    sec.appendChild(h);
+    sec.appendChild(meta);
+    sec.appendChild(strip);
+    body.appendChild(sec);
+  }
+}
+
+/* ---------- nav counts ---------- */
+function updateNavCounts() {
+  const g = $("count-gallery"), f = $("count-favs");
+  g.hidden = shots.length === 0;
+  g.textContent = shots.length;
+  f.hidden = favs.length === 0;
+  f.textContent = favs.length;
 }
 
 /* ---------- capture ---------- */
@@ -383,6 +567,7 @@ async function keepAwake(on) {
   } catch (e) { /* not critical */ }
 }
 
+const HINT = "get in front of the camera & wave. stay off the road";
 let countdownAbort = null;
 async function countdownPhoto(seconds) {
   if (!state.sel) return;
@@ -392,7 +577,7 @@ async function countdownPhoto(seconds) {
   $("countdown-cam").textContent = shortName(cam);
   overlay.classList.remove("flash");
   num.classList.remove("word", "hot");
-  document.querySelector(".countdown-hint").textContent = "get in front of the camera & wave";
+  document.querySelector(".countdown-hint").textContent = HINT;
   overlay.hidden = false;
   keepAwake(true);
   countdownAbort = { stop: false };
@@ -428,7 +613,7 @@ async function countdownPhoto(seconds) {
     const frame = await grabFrame(cam, label);
     if (frame) grabbed.push(await addShot(frame.url, cam, label));
   }
-  hint.textContent = "get in front of the camera & wave";
+  hint.textContent = HINT;
   num.classList.remove("word");
   keepAwake(false);
   overlay.hidden = true;
@@ -450,13 +635,13 @@ function closeResult(saved) {
 function showResult(shotList, cam) {
   const grid = $("result-grid");
   grid.innerHTML = "";
-  $("result-title").textContent = shortName(cam);
+  $("result-title").textContent = cam ? shortName(cam) : "your photo";
   for (const s of shotList) {
     const fig = document.createElement("figure");
     fig.className = "shot-fig";
     const im = document.createElement("img");
     im.src = s.sid ? shotSrc(s) : s.url;
-    im.alt = `${cam.name}. ${s.label}`;
+    im.alt = `${cam ? cam.name : "camera"}. ${s.label}`;
     const cap = document.createElement("div");
     cap.className = "shot-label";
     const when = s.when instanceof Date ? s.when : new Date(s.when);
@@ -514,22 +699,6 @@ function startLocating() {
   );
 }
 
-/* ---------- district chips ---------- */
-function renderChips() {
-  const box = $("chips");
-  box.innerHTML = "";
-  const present = new Set(state.cams.flatMap(c => c.areas));
-  const order = ["ALL", "KE", "PT", "KR", "LA", "MU", "NO", "HA", "PI", "P", "ST"];
-  for (const tag of order) {
-    if (tag !== "ALL" && !present.has(tag)) continue;
-    const b = document.createElement("button");
-    b.className = "chip" + (state.filter === tag ? " on" : "");
-    b.textContent = AREAS[tag] || tag.toLowerCase();
-    b.onclick = () => { state.filter = tag; renderChips(); renderMarkers(); };
-    box.appendChild(b);
-  }
-}
-
 /* ---------- boot ---------- */
 async function boot() {
   try {
@@ -538,13 +707,13 @@ async function boot() {
     state.cams = data.cams.filter(c => c.lat != null);
     const skipped = data.cams.length - state.cams.length;
     buildSpots();
-    renderChips();
     renderMarkers();
     toast(`${state.cams.length} cameras on the map${skipped ? ` (${skipped} without a location)` : ""}`);
   } catch (e) {
     toast("could not load camera data");
     console.error(e);
   }
+  updateNavCounts();
   startLocating();
 
   const camParam = new URLSearchParams(location.search).get("cam");
@@ -569,6 +738,16 @@ $("countdown-cancel").onclick = () => {
 $("result-close").onclick = () => closeResult(true);
 $("btn-done").onclick = () => closeResult(true);
 $("btn-again").onclick = () => { $("result").hidden = true; countdownPhoto(state.lastCount); };
+
+$("btn-fav").onclick = () => {
+  if (!state.sel) return;
+  toggleFav(state.sel.id);
+  toast(isFav(state.sel.id) ? "saved to favorites" : "removed from favorites", 1800);
+};
+$("nav-favs").onclick = () => { renderFavs(); $("favs").hidden = false; };
+$("favs-close").onclick = () => { $("favs").hidden = true; };
+$("nav-gallery").onclick = () => { renderGallery(); $("gallery").hidden = false; };
+$("gallery-close").onclick = () => { $("gallery").hidden = true; };
 
 /* persist captured pixels across refreshes (see sw.js) */
 if ("serviceWorker" in navigator && window.isSecureContext) {

@@ -27,10 +27,11 @@ Useful URL params: `?at=59.449,24.735` fakes your location (desktop testing),
 ## Features
 
 - **Map** (Leaflet + OSM) of all 253 city traffic cameras, grouped into 153
-  spots; district filter chips; live user location with accuracy circle.
+  spots; live user location with accuracy circle.
 - **Camera page**: live preview (5 s refresh), distance + compass bearing,
   walking directions handoff to Google/Apple Maps, multi-view switcher where
-  one junction has several cameras.
+  one junction has several cameras. Cameras with `"approx": true` coordinates
+  show a "location approximate" badge and a note next to directions.
 - **photo now**: grabs the current frame.
 - **Countdown photo** (10/20/30 s): fullscreen countdown with huge digits
   readable from across the street, beeps, screen wake-lock, then a "smile!"
@@ -39,6 +40,13 @@ Useful URL params: `?at=59.449,24.735` fakes your location (desktop testing),
 - **your shots**: captured frames persist in the browser (metadata in
   localStorage, pixels in Cache Storage via a service worker, so they survive
   refresh without any server). Delete any shot via the x with confirmation.
+- **your photos**: gallery of every shot, grouped by camera, newest first;
+  tap a camera's name to jump to it on the map.
+- **favorites**: star cameras into a visit-later list with district and
+  live distance; tap a row to open the camera.
+- **Safety copy**: photograph-yourself-only, traffic-law, and no-trespassing
+  disclaimers on the camera sheet, the favorites page, the countdown, and in
+  about & privacy. UI icons come from the Brand Estonia icon set.
 
 ## Data pipeline
 

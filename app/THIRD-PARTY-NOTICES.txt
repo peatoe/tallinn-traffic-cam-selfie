@@ -80,6 +80,16 @@ under a non-exclusive, non-transferable licence, worldwide, for promoting
 Estonia. The fonts are used here unmodified. Per the licence, the typeface may
 not be modified or used to create logos, wordmarks, or trademarks.
 
+## Icons: Brand Estonia
+
+The UI icons (camera, star, picture, loop, clock, exclamation, information,
+target) are from the
+Brand Estonia icon set, © Estonian Business and Innovation Agency, distributed
+free of charge via the
+[Brand Estonia toolbox](https://toolbox.estonia.ee/document/17). They are
+inlined as SVG in `app/index.html`, recoloured to the app's palette, and the
+decorative outer circles removed; otherwise unmodified.
+
 ## Design
 
 Visual style (typography, lowercase headlines, palette) is inspired by
