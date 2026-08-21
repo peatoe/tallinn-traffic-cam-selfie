@@ -29,6 +29,10 @@
 </header>
 
 <nav class="chips" id="nav" aria-label="Your photos and favorites">
+  <button class="chip" id="nav-gallery">
+    <svg class="ico" width="15" height="15" aria-hidden="true"><use href="#i-picture"/></svg>
+    your photos <span class="chip-count" id="count-gallery" hidden>0</span>
+  </button>
   <button class="chip" id="nav-favs">
     <svg class="ico" width="15" height="15" aria-hidden="true"><use href="#i-star"/></svg>
     favorites <span class="chip-count" id="count-favs" hidden>0</span>
@@ -126,7 +130,8 @@
         and compute distances. It is never sent to this app's servers. there are none.</li>
       <li><b>Your shots</b> are stored only on your device (browser storage).
         Delete them anytime with the x. Your browser may evict them under storage
-        pressure, so save keepers to your phone.</li>
+        pressure, so save keepers to your phone. Browse them all on the
+        <b>your photos</b> page up top.</li>
       <li><b>Your favorites</b> (starred cameras) are likewise stored only in
         this browser. Nothing about them leaves your device.</li>
       <li><b>No analytics, no tracking, no cookies from this app.</b> Your browser
@@ -184,6 +189,15 @@
   <div class="favs-list" id="favs-list"></div>
   <div class="result-note result-note-left">cameras you starred to visit later. saved only in this browser.<br>
   when you go: follow traffic and safety laws, stay on public paths and sidewalks. no trespassing.</div>
+</div>
+
+<!-- your photos gallery -->
+<div class="result" id="gallery" hidden>
+  <button class="sheet-close" id="gallery-close" aria-label="Close">×</button>
+  <h2 class="result-title">your photos</h2>
+  <div class="gal-body" id="gal-body"></div>
+  <div class="result-note result-note-left">tap a camera name to open that camera.
+  photos stay in this browser until you delete them. long-press a photo to save it to your phone.</div>
 </div>
 
 <!-- duotone filter: maps toner's black to Visit Estonia blue #000087, keeps white.

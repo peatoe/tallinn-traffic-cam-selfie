@@ -363,4 +363,17 @@ body.tile-toner .leaflet-tile { filter: url(#ve-duotone); }
 }
 .fav-remove:active { background: var(--mist); }
 .empty-note { font-size: 14px; color: #777; max-width: 480px; line-height: 1.5; }
+
+/* ---- your photos page ---- */
+.gal-body { display: flex; flex-direction: column; gap: 20px; max-width: 900px; }
+.gal-cam {
+  font-family: var(--headline); font-weight: 400; font-size: 20px;
+  line-height: 1.2; text-transform: lowercase; color: var(--accent);
+  background: none; border: none; cursor: pointer; text-align: left; padding: 0;
+}
+.gal-cam:active { opacity: .7; }
+.gal-cam-off { color: #777; cursor: default; }
+.gal-meta { font-size: 12px; color: #777; margin-top: 2px; }
+.gal-sec .shots-strip { margin-top: 8px; }
+.shot-when { font-size: 10px; color: #777; margin-top: 3px; text-align: center; }
 .result-note-left { text-align: left; }

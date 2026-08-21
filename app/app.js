@@ -66,6 +66,12 @@ function areaName(cam) {
   return AREAS[tag] || String(tag).toLowerCase();
 }
 
+function fmtWhen(when) {
+  const d = when instanceof Date ? when : new Date(when);
+  return d.toLocaleDateString("et-EE", { day: "2-digit", month: "2-digit" }) + " " +
+    d.toLocaleTimeString("et-EE", { hour: "2-digit", minute: "2-digit" });
+}
+
 /* ---------- map ---------- */
 const map = L.map("map", { zoomControl: false, attributionControl: true })
   .setView([59.437, 24.754], 12);
@@ -383,6 +389,8 @@ async function confirmDelete(sid, after) {
   if (await askConfirm()) {
     await deleteShot(sid);
     renderShots();
+    if (!$("gallery").hidden) renderGallery();
+    updateNavCounts();
     if (after) after();
   }
 }
@@ -395,6 +403,7 @@ async function addShot(url, cam, label) {
   shots.unshift(shot);
   saveShots(shots);
   renderShots();
+  updateNavCounts();
   return shot;
 }
 
@@ -407,12 +416,9 @@ function makeShotX(sid, small, after) {
   return x;
 }
 
-function renderShots() {
-  const strip = $("shots-strip");
-  strip.innerHTML = "";
-  const mine = shots.filter(s => state.sel && s.camId === state.sel.id);
-  $("shots").hidden = mine.length === 0;
-  for (const s of mine.slice(0, 20)) {
+/* one side-scrolling strip of thumbnails; used by the sheet and the gallery */
+function fillStrip(strip, list, withWhen) {
+  for (const s of list) {
     const wrap = document.createElement("div");
     wrap.className = "shot-thumb";
     const im = document.createElement("img");
@@ -424,8 +430,22 @@ function renderShots() {
     im.onerror = () => { wrap.remove(); };
     wrap.appendChild(im);
     wrap.appendChild(makeShotX(s.sid, true));
+    if (withWhen) {
+      const t = document.createElement("div");
+      t.className = "shot-when";
+      t.textContent = fmtWhen(s.when);
+      wrap.appendChild(t);
+    }
     strip.appendChild(wrap);
   }
+}
+
+function renderShots() {
+  const strip = $("shots-strip");
+  strip.innerHTML = "";
+  const mine = shots.filter(s => state.sel && s.camId === state.sel.id);
+  $("shots").hidden = mine.length === 0;
+  fillStrip(strip, mine.slice(0, 20), false);
 }
 
 function pulseShots() {
@@ -435,9 +455,62 @@ function pulseShots() {
   el.scrollIntoView({ behavior: "smooth", block: "nearest" });
 }
 
+/* ---------- gallery (all photos, grouped by camera) ---------- */
+function renderGallery() {
+  const body = $("gal-body");
+  body.innerHTML = "";
+  if (!shots.length) {
+    const p = document.createElement("p");
+    p.className = "empty-note";
+    p.textContent = "no photos yet. pick a camera on the map, walk there, start a countdown, wave.";
+    body.appendChild(p);
+    return;
+  }
+  const groups = new Map(); // camId -> shots, newest first; section order = newest shot first
+  for (const s of shots) {
+    if (!groups.has(s.camId)) groups.set(s.camId, []);
+    groups.get(s.camId).push(s);
+  }
+  for (const [camId, list] of groups) {
+    const cam = state.cams.find(c => c.id === camId);
+    const sec = document.createElement("section");
+    sec.className = "gal-sec";
+
+    const h = document.createElement("button");
+    h.className = "gal-cam";
+    if (cam) {
+      h.textContent = `${camLabel(cam)} ›`;
+      h.title = "Open this camera";
+      h.onclick = () => {
+        $("gallery").hidden = true;
+        selectSpot(state.spots.get(spotKey(cam)), cam.id);
+      };
+    } else {
+      h.textContent = `camera ${camId} (no longer listed)`;
+      h.disabled = true;
+      h.classList.add("gal-cam-off");
+    }
+
+    const meta = document.createElement("div");
+    meta.className = "gal-meta";
+    meta.textContent = `${list.length} ${list.length === 1 ? "photo" : "photos"}`;
+
+    const strip = document.createElement("div");
+    strip.className = "shots-strip";
+    fillStrip(strip, list, true);
+
+    sec.appendChild(h);
+    sec.appendChild(meta);
+    sec.appendChild(strip);
+    body.appendChild(sec);
+  }
+}
+
 /* ---------- nav counts ---------- */
 function updateNavCounts() {
-  const f = $("count-favs");
+  const g = $("count-gallery"), f = $("count-favs");
+  g.hidden = shots.length === 0;
+  g.textContent = shots.length;
   f.hidden = favs.length === 0;
   f.textContent = favs.length;
 }
@@ -554,13 +627,13 @@ function closeResult(saved) {
 function showResult(shotList, cam) {
   const grid = $("result-grid");
   grid.innerHTML = "";
-  $("result-title").textContent = shortName(cam);
+  $("result-title").textContent = cam ? shortName(cam) : "your photo";
   for (const s of shotList) {
     const fig = document.createElement("figure");
     fig.className = "shot-fig";
     const im = document.createElement("img");
     im.src = s.sid ? shotSrc(s) : s.url;
-    im.alt = `${cam.name}. ${s.label}`;
+    im.alt = `${cam ? cam.name : "camera"}. ${s.label}`;
     const cap = document.createElement("div");
     cap.className = "shot-label";
     const when = s.when instanceof Date ? s.when : new Date(s.when);
@@ -665,6 +738,8 @@ $("btn-fav").onclick = () => {
 };
 $("nav-favs").onclick = () => { renderFavs(); $("favs").hidden = false; };
 $("favs-close").onclick = () => { $("favs").hidden = true; };
+$("nav-gallery").onclick = () => { renderGallery(); $("gallery").hidden = false; };
+$("gallery-close").onclick = () => { $("gallery").hidden = true; };
 
 /* persist captured pixels across refreshes (see sw.js) */
 if ("serviceWorker" in navigator && window.isSecureContext) {
