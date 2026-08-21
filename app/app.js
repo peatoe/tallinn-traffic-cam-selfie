@@ -182,10 +182,10 @@ function selectSpot(spot, camId) {
   openSheet(spot, cam);
   updateLine();
   const target = L.latLng(spot.lat, spot.lng);
-  if (state.user) {
+  if (state.user && !userIsFar()) {
     map.fitBounds(L.latLngBounds([state.user, target]).pad(0.25));
   } else {
-    map.setView(target, Math.max(map.getZoom(), 15));
+    map.setView(target, Math.max(map.getZoom(), 15)); // don't fit a continent-wide line
   }
 }
 
@@ -961,13 +961,33 @@ function showResult(shotList, cam) {
 }
 
 /* ---------- geolocation ---------- */
+/* visitors located far from tallinn get a one-time explainer instead of the
+   map jumping to their city; suppressed when they arrived via a ?cam= link */
+const TLL_CENTER = L.latLng(59.437, 24.754);
+const AWAY_M = 40000;
+const AWAY_KEY = "tcs-away-v1";
+
+function userIsFar() {
+  return !!state.user && haversine(state.user, TLL_CENTER) > AWAY_M;
+}
+
+function maybeShowAway() {
+  if (!userIsFar() || state.awaySuppressed) return;
+  try {
+    if (sessionStorage.getItem(AWAY_KEY)) return;
+    sessionStorage.setItem(AWAY_KEY, "1");
+  } catch (e) { /* still show it, just maybe again next reload */ }
+  $("away").hidden = false;
+}
+
 function onPosition(lat, lng, acc) {
   state.user = L.latLng(lat, lng);
   if (!state.userMarker) {
     const icon = L.divIcon({ className: "", html: '<div class="user-dot"></div>', iconSize: [18, 18], iconAnchor: [9, 9] });
     state.userMarker = L.marker(state.user, { icon, zIndexOffset: 900 }).addTo(map);
     state.accCircle = L.circle(state.user, { radius: acc || 0, color: "#000087", weight: 1, opacity: .4, fillOpacity: .08 }).addTo(map);
-    map.setView(state.user, 14);
+    if (!userIsFar()) map.setView(state.user, 14); // far away: stay on tallinn
+    maybeShowAway();
   } else {
     state.userMarker.setLatLng(state.user);
     state.accCircle.setLatLng(state.user).setRadius(acc || 0);
@@ -1019,9 +1039,10 @@ async function boot() {
     console.error(e);
   }
   updateNavCounts();
-  startLocating();
 
   const camParam = new URLSearchParams(location.search).get("cam");
+  state.awaySuppressed = !!camParam; // arrived via a shared camera link: no greeting
+  startLocating();
   if (camParam) {
     const c = state.cams.find(x => x.id === camParam);
     if (c) selectSpot(state.spots.get(spotKey(c)), c.id);
@@ -1058,7 +1079,6 @@ $("btn-share").onclick = async () => {
     try {
       await navigator.share({
         title: "tallinn traffic cam selfie",
-        text: `watch me wave at ${shortName(cam)}`,
         url,
       });
       return;
@@ -1099,6 +1119,10 @@ $("btn-fav").onclick = () => {
 };
 $("view-map").onclick = () => setView("map");
 $("view-list").onclick = () => setView("list");
+$("away-continue").onclick = () => {
+  $("away").hidden = true;
+  map.setView(TLL_CENTER, 12);
+};
 $("nav-favs").onclick = () => { renderFavs(); $("favs").hidden = false; };
 $("favs-close").onclick = () => { $("favs").hidden = true; };
 $("nav-gallery").onclick = () => { renderGallery(); $("gallery").hidden = false; };
