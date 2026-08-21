@@ -1,3 +1,4 @@
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/C3P325H540)
 # tallinn cam selfie
 
 A mobile-first web app that turns Tallinn's public traffic cameras into selfie
