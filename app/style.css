@@ -314,6 +314,11 @@ body.tile-toner .leaflet-tile { filter: url(#ve-duotone); }
   font-size: 12px; color: #777; margin: 4px 0 0 4px;
 }
 .result-note { font-size: 13px; color: #777; margin: 14px 0; text-align: center; }
+.result-safety {
+  margin-top: 0;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+}
 .result-actions { display: flex; gap: 10px; justify-content: center; }
 
 /* ---- about ---- */
@@ -347,6 +352,12 @@ body.tile-toner .leaflet-tile { filter: url(#ve-duotone); }
   display: grid; place-items: center;
 }
 .sheet-fav.on { background: var(--accent); color: #fff; }
+
+/* ---- safety note on the sheet ---- */
+.safety-note {
+  font-size: 12px; color: #777; line-height: 1.5;
+  margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--line);
+}
 
 /* ---- favorites page ---- */
 .favs-list { display: flex; flex-direction: column; gap: 10px; max-width: 640px; }

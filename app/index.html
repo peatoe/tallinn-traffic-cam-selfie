@@ -90,6 +90,10 @@
     <span class="directions-label">your shots</span>
     <div class="shots-strip" id="shots-strip"></div>
   </div>
+
+  <p class="safety-note">photograph yourself, not strangers. follow traffic and
+  safety laws on the way and while posing. stay on sidewalks and public paths.
+  no trespassing.</p>
 </section>
 
 <!-- about & privacy -->
@@ -152,6 +156,22 @@
         not strangers.</li>
     </ul>
 
+    <h3>safety &amp; respect</h3>
+    <ul>
+      <li><b>Photograph yourself,</b> not strangers. Be kind to anyone who
+        wanders into your frame.</li>
+      <li><b>Follow traffic and safety laws</b> on the way there and while
+        posing. Cross at crossings, obey signals, and never stand in the
+        roadway, on medians, or among moving traffic for a shot.</li>
+      <li><b>No trespassing.</b> Wave from public sidewalks and paths. Don't
+        enter private property or fenced and restricted areas, and don't climb
+        on road infrastructure.</li>
+      <li><b>Some map pins are approximate.</b> Those cameras are marked on the
+        camera page. Directions get you close; look around when you arrive.</li>
+      <li><b>Stay aware.</b> Cars, trams, and bikes won't pose for you. Watch
+        your surroundings. A photo is never worth an accident.</li>
+    </ul>
+
     <h3>source</h3>
     <p>Code: MIT. Camera dataset: ODbL. Full licence texts and notices:
       <a href="THIRD-PARTY-NOTICES.txt" target="_blank" rel="noopener">third-party notices</a>.</p>
@@ -174,7 +194,7 @@
 <div class="countdown" id="countdown" hidden>
   <div class="countdown-cam" id="countdown-cam"></div>
   <div class="countdown-num" id="countdown-num">10</div>
-  <div class="countdown-hint">get in front of the camera & wave</div>
+  <div class="countdown-hint">get in front of the camera & wave. stay off the road</div>
   <button class="btn btn-ghost countdown-cancel" id="countdown-cancel">cancel</button>
 </div>
 
@@ -184,6 +204,8 @@
   <h2 class="result-title" id="result-title">your photo</h2>
   <div class="result-grid" id="result-grid"></div>
   <div class="result-note">saved to <b>your shots</b> on the camera page. they stay in this browser until you delete them.<br>long-press a photo to save it to your phone. frames grabbed a few seconds apart</div>
+  <div class="result-note result-safety">photograph yourself, not strangers. follow traffic and
+  safety laws on the way and while posing. stay on sidewalks and public paths. no trespassing.</div>
   <div class="result-actions">
     <button class="btn btn-primary" id="btn-again"><svg class="ico" width="17" height="17" aria-hidden="true"><use href="#i-loop"/></svg> again</button>
     <button class="btn btn-dark" id="btn-done">done</button>

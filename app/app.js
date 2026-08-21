@@ -567,6 +567,7 @@ async function keepAwake(on) {
   } catch (e) { /* not critical */ }
 }
 
+const HINT = "get in front of the camera & wave. stay off the road";
 let countdownAbort = null;
 async function countdownPhoto(seconds) {
   if (!state.sel) return;
@@ -576,7 +577,7 @@ async function countdownPhoto(seconds) {
   $("countdown-cam").textContent = shortName(cam);
   overlay.classList.remove("flash");
   num.classList.remove("word", "hot");
-  document.querySelector(".countdown-hint").textContent = "get in front of the camera & wave";
+  document.querySelector(".countdown-hint").textContent = HINT;
   overlay.hidden = false;
   keepAwake(true);
   countdownAbort = { stop: false };
@@ -612,7 +613,7 @@ async function countdownPhoto(seconds) {
     const frame = await grabFrame(cam, label);
     if (frame) grabbed.push(await addShot(frame.url, cam, label));
   }
-  hint.textContent = "get in front of the camera & wave";
+  hint.textContent = HINT;
   num.classList.remove("word");
   keepAwake(false);
   overlay.hidden = true;
