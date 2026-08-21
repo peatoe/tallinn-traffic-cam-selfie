@@ -169,7 +169,8 @@ body {
 }
 .seg .chip .ico { top: 0; }
 .leaflet-container { font-family: var(--body); }
-body.tile-toner .leaflet-tile { filter: url(#ve-duotone); }
+/* tiles are recolored to the blue duotone on canvas in app.js; no CSS filters
+   (iOS Safari drops SVG filters on the transformed tile pane) */
 .cam-tip {
   font-family: var(--body); font-weight: 700; font-size: 12px;
 }

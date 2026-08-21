@@ -77,23 +77,55 @@ const map = L.map("map", { zoomControl: false, attributionControl: true })
   .setView([59.437, 24.754], 12);
 L.control.zoom({ position: "bottomright" }).addTo(map);
 
-/* Stamen Toner (hosted by Stadia Maps), recolored black -> Visit Estonia blue
-   by the #ve-duotone SVG filter. Falls back to plain OSM if toner tiles fail
-   (e.g. the domain is not registered with Stadia, or an outage). */
+/* Stamen Toner (hosted by Stadia Maps), recolored black -> Visit Estonia blue.
+   The recolor happens on a canvas, pixel by pixel: iOS Safari silently drops
+   SVG url() filters on Leaflet's transformed tile pane, so filters are out.
+   Canvas tiles are also drawn a hair oversized to close the hairline seams
+   phones show at fractional device-pixel offsets. Falls back to plain OSM if
+   toner tiles fail (e.g. the domain is not registered with Stadia). */
+const DuotoneLayer = L.TileLayer.extend({
+  createTile: function (coords, done) {
+    const size = this.getTileSize();
+    const tile = document.createElement("canvas");
+    tile.width = size.x;
+    tile.height = size.y;
+    tile.style.width = (size.x + 0.75) + "px";
+    tile.style.height = (size.y + 0.75) + "px";
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => {
+      const ctx = tile.getContext("2d");
+      ctx.drawImage(img, 0, 0, size.x, size.y);
+      try {
+        const px = ctx.getImageData(0, 0, size.x, size.y);
+        const d = px.data;
+        for (let i = 0; i < d.length; i += 4) {
+          const v = d[i];               // toner is grayscale: red carries it all
+          d[i + 1] = v;                 // black -> #000087, white stays white
+          d[i + 2] = 0.471 * v + 135;
+        }
+        ctx.putImageData(px, 0, 0);
+      } catch (e) { /* blocked read: keep the plain tile */ }
+      done(null, tile);
+    };
+    img.onerror = () => done(new Error("tile load failed"), tile);
+    img.src = this.getTileUrl(coords);
+    return tile;
+  },
+});
+
 const CAMS_CREDIT = ' · cams: <a href="' + SITE + '">City of Tallinn</a>';
 function addOsmFallback() {
-  document.body.classList.remove("tile-toner");
   L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
     maxZoom: 19,
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' + CAMS_CREDIT,
   }).addTo(map);
 }
 (function addToner() {
-  document.body.classList.add("tile-toner");
   const key = (window.APP_CONFIG && window.APP_CONFIG.stadiaApiKey) || "";
   const tonerUrl = "https://tiles.stadiamaps.com/tiles/stamen_toner/{z}/{x}/{y}.png" +
     (key ? "?api_key=" + encodeURIComponent(key) : "");
-  const toner = L.tileLayer(tonerUrl, {
+  const toner = new DuotoneLayer(tonerUrl, {
     maxZoom: 20,
     attribution: '&copy; <a href="https://stadiamaps.com/">Stadia Maps</a> &copy; <a href="https://stamen.com/">Stamen Design</a> &copy; <a href="https://openmaptiles.org/">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' + CAMS_CREDIT,
   }).addTo(map);
