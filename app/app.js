@@ -253,9 +253,13 @@ function updateLine() {
 }
 
 /* ---------- live preview ---------- */
+const BLANK_PX = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
+
 function startPreview(cam) {
   stopPreview();
   const img = $("preview-img");
+  img.src = BLANK_PX; // never show the previous camera's frame under this one's name
+  $("preview-time").textContent = "…";
   const load = () => {
     const ts = Date.now();
     const pre = new Image();
@@ -1043,6 +1047,50 @@ $("btn-again").onclick = () => {
   if (state.lastCapture === "now") photoNow();
   else countdownPhoto(state.lastCapture);
 };
+
+/* phones: the native share sheet. the clipboard path only exists for
+   browsers with no share API at all (mainly desktop chrome) */
+$("btn-share").onclick = async () => {
+  if (!state.sel) return;
+  const cam = state.sel;
+  const url = `${location.origin}${location.pathname}?cam=${cam.id}`;
+  if (navigator.share) {
+    try {
+      await navigator.share({
+        title: "tallinn traffic cam selfie",
+        text: `watch me wave at ${shortName(cam)}`,
+        url,
+      });
+      return;
+    } catch (e) {
+      if (e && e.name === "AbortError") return; // user closed the share sheet
+      /* anything else: fall through and copy instead */
+    }
+  }
+  try {
+    await navigator.clipboard.writeText(url);
+    toast("link copied. send it to someone", 2600);
+  } catch (e) {
+    if (legacyCopy(url)) toast("link copied. send it to someone", 2600);
+    else toast(url, 6000); // last resort: show it so it can be copied by hand
+  }
+};
+
+/* clipboard for insecure contexts (e.g. testing over plain http on the lan) */
+function legacyCopy(text) {
+  const ta = document.createElement("textarea");
+  ta.value = text;
+  ta.setAttribute("readonly", "");
+  ta.style.position = "fixed";
+  ta.style.opacity = "0";
+  document.body.appendChild(ta);
+  ta.select();
+  ta.setSelectionRange(0, text.length);
+  let ok = false;
+  try { ok = document.execCommand("copy"); } catch (e) { /* unsupported */ }
+  ta.remove();
+  return ok;
+}
 
 $("btn-fav").onclick = () => {
   if (!state.sel) return;

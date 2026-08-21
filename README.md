@@ -51,8 +51,10 @@ Useful URL params: `?at=59.449,24.735` fakes your location (desktop testing),
   cards skip rendering entirely (content-visibility).
 - **Camera page**: live preview (5 s refresh), distance + compass bearing,
   walking directions handoff to Google/Apple Maps, multi-view switcher where
-  one junction has several cameras. Cameras with `"approx": true` coordinates
-  show a "location approximate" badge and a note next to directions.
+  one junction has several cameras, and a share button that sends the
+  camera's deep link (`?cam=<id>`) via the native share sheet (clipboard
+  fallback). Cameras with `"approx": true` coordinates show a "location
+  approximate" badge and a note next to directions.
 - **photo now**: grabs the current frame.
 - **Countdown photo** (5/10/30 s): fullscreen countdown with huge digits
   readable from across the street, beeps, screen wake-lock, then a "smile!"

@@ -231,7 +231,7 @@ body {
   font-family: var(--headline); font-weight: 400;
   font-size: 24px; line-height: 1.15;
   text-transform: lowercase;
-  padding-right: 96px; /* room for the star + close buttons */
+  padding-right: 140px; /* room for the share + star + close buttons */
 }
 .sheet-meta {
   display: flex; align-items: center; gap: 10px;
@@ -418,12 +418,16 @@ body {
 }
 .shot-fig { position: relative; }
 
-/* ---- fav toggle on the sheet ---- */
+/* ---- fav + share buttons on the sheet ---- */
 .sheet-fav {
   right: 56px; color: var(--ink);
   display: grid; place-items: center;
 }
 .sheet-fav.on { background: var(--accent); color: #fff; }
+.sheet-share {
+  right: 100px; color: var(--ink);
+  display: grid; place-items: center;
+}
 
 /* ---- safety note on the sheet ---- */
 .safety-note {
