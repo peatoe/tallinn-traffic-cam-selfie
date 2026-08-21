@@ -95,8 +95,56 @@ body {
 /* optical centering: lowercase text sits low in its box, nudge icons to match */
 .chip .ico, .badge .ico, .btn .ico { position: relative; top: 1px; }
 
-/* ---- map ---- */
-#map { flex: 1; min-height: 0; z-index: 1; background: var(--mist); }
+/* ---- map / list stage ---- */
+.stage { flex: 1; min-height: 0; position: relative; z-index: 1; }
+#map { position: absolute; inset: 0; background: var(--mist); }
+.cam-list {
+  position: absolute; inset: 0; z-index: 1001; /* above leaflet controls */
+  background: var(--paper);
+  overflow-y: auto; -webkit-overflow-scrolling: touch;
+  padding: 12px var(--pad) 24px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 14px 12px; align-content: start;
+}
+.cam-card { cursor: pointer; }
+.cam-card-img {
+  position: relative; aspect-ratio: 16/9;
+  background: var(--mist); border: 1px solid var(--line);
+  border-radius: 10px; overflow: hidden;
+}
+.cam-card-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.cam-card-star {
+  position: absolute; top: 6px; right: 6px;
+  width: 32px; height: 32px; border-radius: 50%; border: none;
+  background: rgba(0, 0, 0, .45); color: #fff;
+  display: grid; place-items: center; cursor: pointer;
+}
+.cam-card-star.on { background: var(--accent); }
+.cam-card-name {
+  font-weight: 700; font-size: 13px; text-transform: lowercase;
+  line-height: 1.25; margin-top: 6px;
+}
+.cam-card-meta {
+  display: flex; gap: 6px; align-items: center; flex-wrap: wrap;
+  font-size: 11px; color: #777; margin-top: 3px;
+}
+.cam-card-meta .badge { font-size: 10px; padding: 2px 7px; }
+.cam-card-dist { color: var(--accent); font-weight: 700; }
+.seg {
+  margin-left: auto;
+  display: inline-flex; align-items: center; flex: 0 0 auto;
+  background: var(--mist); border-radius: 999px; padding: 3px; gap: 2px;
+}
+.seg .chip {
+  border: none; border-radius: 999px; background: none;
+  color: #8a959c; padding: 5px 13px;
+}
+.seg .chip.on {
+  background: var(--paper); color: var(--accent);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, .16);
+}
+.seg .chip .ico { top: 0; }
 .leaflet-container { font-family: var(--body); }
 body.tile-toner .leaflet-tile { filter: url(#ve-duotone); }
 .cam-tip {

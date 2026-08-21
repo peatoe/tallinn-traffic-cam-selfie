@@ -18,9 +18,9 @@ black/white with deep-blue accents.
   <img src="docs/screenshots/map-mobile.png" width="390" alt="map of all 253 cameras with live user location">
 </p>
 
-| camera page | your photos | favorites |
-|---|---|---|
-| ![camera sheet with live preview, countdown buttons, and approximate-location notice](docs/screenshots/sheet-mobile.png) | ![gallery of your photos grouped by camera](docs/screenshots/gallery-mobile.png) | ![favorites list with distances](docs/screenshots/favorites-mobile.png) |
+| camera page | list view | your photos | favorites |
+|---|---|---|---|
+| ![camera sheet with live preview, countdown buttons, and approximate-location notice](docs/screenshots/sheet-mobile.png) | ![list view with live camera feeds](docs/screenshots/list-mobile.png) | ![gallery of your photos grouped by camera](docs/screenshots/gallery-mobile.png) | ![favorites list with distances](docs/screenshots/favorites-mobile.png) |
 
 ## Run it
 
@@ -39,6 +39,10 @@ Useful URL params: `?at=59.449,24.735` fakes your location (desktop testing),
 
 - **Map** (Leaflet + OSM) of all 253 city traffic cameras, grouped into 153
   spots; live user location with accuracy circle.
+- **List view**: an iOS-style toggle in the nav switches the map for a
+  scrollable list of every camera (nearest first when located, alphabetical
+  otherwise) with district, distance, and a favorite star on each row. The
+  chosen view is remembered.
 - **Camera page**: live preview (5 s refresh), distance + compass bearing,
   walking directions handoff to Google/Apple Maps, multi-view switcher where
   one junction has several cameras. Cameras with `"approx": true` coordinates

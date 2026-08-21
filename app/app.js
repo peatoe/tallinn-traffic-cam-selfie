@@ -11,8 +11,8 @@ const AREAS = {
 
 const $ = (id) => document.getElementById(id);
 const state = {
-  cams: [], spots: new Map(), markers: new Map(),
-  sel: null, selSpot: null,
+  cams: [], spots: new Map(), markers: new Map(), byId: new Map(),
+  sel: null, selSpot: null, view: "map",
   user: null, userMarker: null, accCircle: null, line: null,
   watching: false, watchId: null,
   previewTimer: null, wakeLock: null, lastCapture: "now",
@@ -271,6 +271,55 @@ function toggleFav(id) {
   updateFavBtn();
   updateNavCounts();
   if (!$("favs").hidden) renderFavs();
+  const star = listStars.get(id);
+  if (star) {
+    star.classList.toggle("on", isFav(id));
+    star.setAttribute("aria-pressed", String(isFav(id)));
+    star.title = isFav(id) ? "Remove from favorites" : "Save to favorites";
+  }
+}
+
+const STAR_SVG = '<svg class="ico" width="20" height="20" aria-hidden="true"><use href="#i-star"/></svg>';
+
+/* name, area badge, approx marker, distance; shared by favorites and list rows */
+function camRowMain(cam) {
+  const main = document.createElement("div");
+  main.className = "fav-main";
+  const name = document.createElement("div");
+  name.className = "fav-name";
+  name.textContent = camLabel(cam);
+  const meta = document.createElement("div");
+  meta.className = "fav-meta";
+  const badge = document.createElement("span");
+  badge.className = "badge";
+  badge.textContent = areaName(cam);
+  meta.appendChild(badge);
+  if (cam.approx) {
+    const ap = document.createElement("span");
+    ap.textContent = "≈ approximate location";
+    meta.appendChild(ap);
+  }
+  const dist = document.createElement("span");
+  dist.className = "fav-dist";
+  if (state.user) {
+    dist.textContent = `${fmtDist(haversine(state.user, cam))} ${compass(bearing(state.user, cam))}`;
+  }
+  meta.appendChild(dist);
+  main.appendChild(name);
+  main.appendChild(meta);
+  return { main, dist };
+}
+
+function rowGoesTo(row, cam) {
+  const go = () => {
+    $("favs").hidden = true;
+    selectSpot(state.spots.get(spotKey(cam)), cam.id);
+  };
+  row.tabIndex = 0;
+  row.setAttribute("role", "button");
+  row.setAttribute("aria-label", `Open ${shortName(cam)}`);
+  row.onclick = go;
+  row.onkeydown = (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(); } };
 }
 
 function renderFavs() {
@@ -287,52 +336,110 @@ function renderFavs() {
   for (const cam of cams) {
     const row = document.createElement("div");
     row.className = "fav-row";
-    row.tabIndex = 0;
-    row.setAttribute("role", "button");
-    row.setAttribute("aria-label", `Open ${shortName(cam)}`);
+    rowGoesTo(row, cam);
 
-    const main = document.createElement("div");
-    main.className = "fav-main";
+    const rm = document.createElement("button");
+    rm.className = "fav-remove";
+    rm.title = "Remove from favorites";
+    rm.setAttribute("aria-label", "Remove from favorites");
+    rm.innerHTML = STAR_SVG;
+    rm.onclick = (e) => { e.stopPropagation(); toggleFav(cam.id); };
+
+    row.appendChild(camRowMain(cam).main);
+    row.appendChild(rm);
+    list.appendChild(row);
+  }
+}
+
+/* ---------- map / list view ---------- */
+const VIEW_KEY = "tcs-view-v1";
+const listStars = new Map(); // camId -> star button in the list
+const listDists = new Map(); // camId -> distance span in the list
+
+function setView(v) {
+  state.view = v;
+  try { localStorage.setItem(VIEW_KEY, v); } catch { /* full */ }
+  $("view-map").classList.toggle("on", v === "map");
+  $("view-list").classList.toggle("on", v === "list");
+  $("view-map").setAttribute("aria-pressed", String(v === "map"));
+  $("view-list").setAttribute("aria-pressed", String(v === "list"));
+  if (v === "list") { state.listTs = Date.now(); renderList(); }
+  $("list").hidden = v !== "list";
+}
+
+function renderList() {
+  const box = $("list");
+  box.innerHTML = "";
+  listStars.clear();
+  listDists.clear();
+  state.listSortedByDist = !!state.user;
+  const ts = state.listTs || Date.now();
+  const cams = [...state.cams].sort((a, b) =>
+    state.user
+      ? haversine(state.user, a) - haversine(state.user, b)
+      : shortName(a).localeCompare(shortName(b), "et"));
+  for (const cam of cams) {
+    const card = document.createElement("div");
+    card.className = "cam-card";
+    rowGoesTo(card, cam);
+
+    const imgWrap = document.createElement("div");
+    imgWrap.className = "cam-card-img";
+    const im = document.createElement("img");
+    im.src = imgUrl(cam.id, ts);
+    im.alt = cam.name;
+    im.loading = "lazy";
+    im.decoding = "async";
+    im.onerror = () => { im.remove(); };
+    imgWrap.appendChild(im);
+
+    const star = document.createElement("button");
+    star.className = "cam-card-star" + (isFav(cam.id) ? " on" : "");
+    star.title = isFav(cam.id) ? "Remove from favorites" : "Save to favorites";
+    star.setAttribute("aria-label", "Favorite");
+    star.setAttribute("aria-pressed", String(isFav(cam.id)));
+    star.innerHTML = '<svg class="ico" width="17" height="17" aria-hidden="true"><use href="#i-star"/></svg>';
+    star.onclick = (e) => { e.stopPropagation(); toggleFav(cam.id); };
+    listStars.set(cam.id, star);
+    imgWrap.appendChild(star);
+
     const name = document.createElement("div");
-    name.className = "fav-name";
+    name.className = "cam-card-name";
     name.textContent = camLabel(cam);
+
     const meta = document.createElement("div");
-    meta.className = "fav-meta";
+    meta.className = "cam-card-meta";
     const badge = document.createElement("span");
     badge.className = "badge";
     badge.textContent = areaName(cam);
     meta.appendChild(badge);
     if (cam.approx) {
       const ap = document.createElement("span");
-      ap.textContent = "≈ approximate location";
+      ap.textContent = "≈";
+      ap.title = "approximate location";
       meta.appendChild(ap);
     }
+    const dist = document.createElement("span");
+    dist.className = "cam-card-dist";
     if (state.user) {
-      const d = document.createElement("span");
-      d.className = "fav-dist";
-      d.textContent = `${fmtDist(haversine(state.user, cam))} ${compass(bearing(state.user, cam))}`;
-      meta.appendChild(d);
+      dist.textContent = `${fmtDist(haversine(state.user, cam))} ${compass(bearing(state.user, cam))}`;
     }
-    main.appendChild(name);
-    main.appendChild(meta);
+    meta.appendChild(dist);
+    listDists.set(cam.id, dist);
 
-    const rm = document.createElement("button");
-    rm.className = "fav-remove";
-    rm.title = "Remove from favorites";
-    rm.setAttribute("aria-label", "Remove from favorites");
-    rm.innerHTML = '<svg class="ico" width="20" height="20" aria-hidden="true"><use href="#i-star"/></svg>';
-    rm.onclick = (e) => { e.stopPropagation(); toggleFav(cam.id); };
+    card.appendChild(imgWrap);
+    card.appendChild(name);
+    card.appendChild(meta);
+    box.appendChild(card);
+  }
+}
 
-    const go = () => {
-      $("favs").hidden = true;
-      selectSpot(state.spots.get(spotKey(cam)), cam.id);
-    };
-    row.onclick = go;
-    row.onkeydown = (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(); } };
-
-    row.appendChild(main);
-    row.appendChild(rm);
-    list.appendChild(row);
+function updateListDists() {
+  if (!state.user || $("list").hidden) return;
+  if (!state.listSortedByDist) { renderList(); return; } // first fix: re-sort nearest first
+  for (const [id, el] of listDists) {
+    const cam = state.byId.get(id);
+    if (cam) el.textContent = `${fmtDist(haversine(state.user, cam))} ${compass(bearing(state.user, cam))}`;
   }
 }
 
@@ -673,6 +780,7 @@ function onPosition(lat, lng, acc) {
   }
   updateDistance();
   updateLine();
+  updateListDists();
 }
 
 function startLocating() {
@@ -706,9 +814,11 @@ async function boot() {
     const r = await fetch("data/cameras.json");
     const data = await r.json();
     state.cams = data.cams.filter(c => c.lat != null);
+    state.byId = new Map(state.cams.map(c => [c.id, c]));
     const skipped = data.cams.length - state.cams.length;
     buildSpots();
     renderMarkers();
+    if (localStorage.getItem(VIEW_KEY) === "list") setView("list");
     toast(`${state.cams.length} cameras on the map${skipped ? ` (${skipped} without a location)` : ""}`);
   } catch (e) {
     toast("could not load camera data");
@@ -749,6 +859,8 @@ $("btn-fav").onclick = () => {
   toggleFav(state.sel.id);
   toast(isFav(state.sel.id) ? "saved to favorites" : "removed from favorites", 1800);
 };
+$("view-map").onclick = () => setView("map");
+$("view-list").onclick = () => setView("list");
 $("nav-favs").onclick = () => { renderFavs(); $("favs").hidden = false; };
 $("favs-close").onclick = () => { $("favs").hidden = true; };
 $("nav-gallery").onclick = () => { renderGallery(); $("gallery").hidden = false; };
