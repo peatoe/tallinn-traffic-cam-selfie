@@ -28,7 +28,12 @@
   </div>
 </header>
 
-<nav class="chips" id="chips" aria-label="Districts"></nav>
+<nav class="chips" id="nav" aria-label="Your photos and favorites">
+  <button class="chip" id="nav-favs">
+    <svg class="ico" width="15" height="15" aria-hidden="true"><use href="#i-star"/></svg>
+    favorites <span class="chip-count" id="count-favs" hidden>0</span>
+  </button>
+</nav>
 
 <main id="map" aria-label="Camera map"></main>
 
@@ -37,6 +42,9 @@
 <!-- camera detail sheet -->
 <section class="sheet" id="sheet" hidden aria-label="Camera details">
   <button class="sheet-close" id="sheet-close" aria-label="Close">×</button>
+  <button class="sheet-close sheet-fav" id="btn-fav" aria-label="Save to favorites" aria-pressed="false" title="Save to favorites">
+    <svg class="ico" width="21" height="21" aria-hidden="true"><use href="#i-star"/></svg>
+  </button>
   <h2 class="sheet-title" id="cam-title">camera</h2>
   <div class="sheet-meta">
     <span class="badge" id="cam-area"></span>
@@ -119,6 +127,8 @@
       <li><b>Your shots</b> are stored only on your device (browser storage).
         Delete them anytime with the x. Your browser may evict them under storage
         pressure, so save keepers to your phone.</li>
+      <li><b>Your favorites</b> (starred cameras) are likewise stored only in
+        this browser. Nothing about them leaves your device.</li>
       <li><b>No analytics, no tracking, no cookies from this app.</b> Your browser
         does contact two third parties: openstreetmap.org for map tiles and
         ristmikud.tallinn.ee for camera images. The city's server may set its own
@@ -165,6 +175,15 @@
     <button class="btn btn-primary" id="btn-again"><svg class="ico" width="17" height="17" aria-hidden="true"><use href="#i-loop"/></svg> again</button>
     <button class="btn btn-dark" id="btn-done">done</button>
   </div>
+</div>
+
+<!-- favorites -->
+<div class="result" id="favs" hidden>
+  <button class="sheet-close" id="favs-close" aria-label="Close">×</button>
+  <h2 class="result-title">favorites</h2>
+  <div class="favs-list" id="favs-list"></div>
+  <div class="result-note result-note-left">cameras you starred to visit later. saved only in this browser.<br>
+  when you go: follow traffic and safety laws, stay on public paths and sidewalks. no trespassing.</div>
 </div>
 
 <!-- duotone filter: maps toner's black to Visit Estonia blue #000087, keeps white.

@@ -86,6 +86,11 @@ body {
   transition: background .15s, color .15s, border-color .15s;
 }
 .chip.on { background: var(--ink); color: #fff; }
+.chip-count {
+  background: var(--accent); color: #fff;
+  font-size: 11px; line-height: 1; font-weight: 700;
+  border-radius: 999px; padding: 3px 7px;
+}
 .ico { display: block; flex: 0 0 auto; }
 /* optical centering: lowercase text sits low in its box, nudge icons to match */
 .chip .ico, .badge .ico, .btn .ico { position: relative; top: 1px; }
@@ -154,7 +159,7 @@ body.tile-toner .leaflet-tile { filter: url(#ve-duotone); }
   font-family: var(--headline); font-weight: 400;
   font-size: 24px; line-height: 1.15;
   text-transform: lowercase;
-  padding-right: 44px;
+  padding-right: 96px; /* room for the star + close buttons */
 }
 .sheet-meta {
   display: flex; align-items: center; gap: 10px;
@@ -325,3 +330,37 @@ body.tile-toner .leaflet-tile { filter: url(#ve-duotone); }
   .result-grid figure { flex: 1 1 300px; }
 }
 .shot-fig { position: relative; }
+
+/* ---- fav toggle on the sheet ---- */
+.sheet-fav {
+  right: 56px; color: var(--ink);
+  display: grid; place-items: center;
+}
+.sheet-fav.on { background: var(--accent); color: #fff; }
+
+/* ---- favorites page ---- */
+.favs-list { display: flex; flex-direction: column; gap: 10px; max-width: 640px; }
+.fav-row {
+  display: flex; align-items: center; gap: 12px;
+  border: 1.5px solid var(--line); border-radius: 14px;
+  padding: 12px 14px; background: var(--paper);
+  cursor: pointer;
+  transition: border-color .15s;
+}
+.fav-row:hover, .fav-row:focus-visible { border-color: var(--ink); }
+.fav-row:active { border-color: var(--accent); }
+.fav-main { flex: 1; min-width: 0; }
+.fav-name { font-weight: 700; font-size: 15px; text-transform: lowercase; }
+.fav-meta {
+  display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
+  margin-top: 5px; font-size: 12px; color: #777;
+}
+.fav-dist { color: var(--accent); font-weight: 700; }
+.fav-remove {
+  border: none; background: none; color: var(--accent); cursor: pointer;
+  width: 40px; height: 40px; border-radius: 50%;
+  display: grid; place-items: center; flex: 0 0 auto;
+}
+.fav-remove:active { background: var(--mist); }
+.empty-note { font-size: 14px; color: #777; max-width: 480px; line-height: 1.5; }
+.result-note-left { text-align: left; }
