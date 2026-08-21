@@ -11,6 +11,16 @@ every few seconds). Design modeled after
 Aino for everything else (Brand Estonia's typefaces), lowercase headlines,
 black/white with deep-blue accents.
 
+## Preview
+
+<p align="center">
+  <img src="docs/screenshots/map-mobile.png" width="390" alt="map of all 253 cameras with live user location">
+</p>
+
+| camera page | your photos | favorites |
+|---|---|---|
+| ![camera sheet with live preview, countdown buttons, and approximate-location notice](docs/screenshots/sheet-mobile.png) | ![gallery of your photos grouped by camera](docs/screenshots/gallery-mobile.png) | ![favorites list with distances](docs/screenshots/favorites-mobile.png) |
+
 ## Run it
 
 ```bash
@@ -47,6 +57,8 @@ Useful URL params: `?at=59.449,24.735` fakes your location (desktop testing),
 - **Safety copy**: photograph-yourself-only, traffic-law, and no-trespassing
   disclaimers on the camera sheet, the favorites page, the countdown, and in
   about & privacy. UI icons come from the Brand Estonia icon set.
+- **Install as an app**: web app manifest and apple touch icon; on iPhone use
+  Share → Add to Home Screen for a standalone full-screen app.
 
 ## Data pipeline
 
