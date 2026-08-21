@@ -428,6 +428,21 @@ body {
   right: 100px; color: var(--ink);
   display: grid; place-items: center;
 }
+/* teardrop confirmation under the share button (desktop copy fallback) */
+.share-tip {
+  position: absolute; top: 54px; right: 82px; z-index: 3;
+  background: var(--ink); color: #fff;
+  font-size: 12.5px; font-weight: 700;
+  padding: 8px 12px; border-radius: 10px;
+  white-space: nowrap;
+  animation: tipin .18s ease-out;
+}
+.share-tip::before {
+  content: ""; position: absolute; top: -4px; right: 28px;
+  width: 9px; height: 9px; background: var(--ink);
+  transform: rotate(45deg);
+}
+@keyframes tipin { from { opacity: 0; transform: translateY(-3px); } to { opacity: 1; transform: none; } }
 
 /* ---- safety note on the sheet ---- */
 .safety-note {

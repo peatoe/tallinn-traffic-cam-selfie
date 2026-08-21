@@ -1090,12 +1090,20 @@ $("btn-share").onclick = async () => {
   }
   try {
     await navigator.clipboard.writeText(url);
-    toast("link copied. send it to someone", 2600);
+    shareTip();
   } catch (e) {
-    if (legacyCopy(url)) toast("link copied. send it to someone", 2600);
+    if (legacyCopy(url)) shareTip();
     else toast(url, 6000); // last resort: show it so it can be copied by hand
   }
 };
+
+/* the copied confirmation, anchored under the share button */
+function shareTip() {
+  const el = $("share-tip");
+  el.hidden = false;
+  clearTimeout(el._t);
+  el._t = setTimeout(() => { el.hidden = true; }, 2600);
+}
 
 /* clipboard for insecure contexts (e.g. testing over plain http on the lan) */
 function legacyCopy(text) {
