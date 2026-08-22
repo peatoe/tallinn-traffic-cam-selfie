@@ -451,6 +451,8 @@ body {
 }
 
 /* ---- favorites page ---- */
+.favs-sort { border-bottom: none; padding: 0 0 14px; flex: 0 0 auto; }
+.chip.dim { opacity: .45; }
 .favs-list { display: flex; flex-direction: column; gap: 10px; max-width: 640px; }
 .fav-row {
   display: flex; align-items: center; gap: 12px;
@@ -489,3 +491,6 @@ body {
 .gal-sec .shots-strip { margin-top: 8px; }
 .shot-when { font-size: 10px; color: #777; margin-top: 3px; text-align: center; }
 .result-note-left { text-align: left; }
+
+/* ---- map markers: lift dots and stars off the busy line work ---- */
+.cam-dot, .cam-star { filter: drop-shadow(0 1.5px 3px rgba(0, 0, 40, .5)); }
