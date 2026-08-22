@@ -138,7 +138,7 @@ body {
 .cam-loading .ico { animation: camspin 1.4s linear infinite; }
 @keyframes camspin { to { transform: rotate(360deg); } }
 .cam-card-star {
-  position: absolute; top: 6px; right: 6px;
+  position: absolute; top: 6px; right: 6px; z-index: 2; 
   width: 32px; height: 32px; border-radius: 50%; border: none;
   background: rgba(0, 0, 0, .45); color: #fff;
   display: grid; place-items: center; cursor: pointer;
