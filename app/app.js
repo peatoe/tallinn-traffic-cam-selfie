@@ -150,6 +150,17 @@ function markerStyle(on) {
   };
 }
 
+/* favorited spots show as a star instead of a dot (Brand Estonia star, filled) */
+function starIcon(on) {
+  const s = on ? 30 : 23;
+  return L.divIcon({
+    className: "",
+    html: `<svg viewBox="12 12 40 40" width="${s}" height="${s}"><path d="M41 47l-8.505-6.025L20 49l5-12.987-10-8.053h13L31.95 15l4.182 12.96L49 27.987l-9 8.026L45 49" fill="${on ? "#000087" : "#111"}" stroke="#fff" stroke-width="3" stroke-linejoin="round"/></svg>`,
+    iconSize: [s, s],
+    iconAnchor: [s / 2, s / 2],
+  });
+}
+
 function buildSpots() {
   state.spots.clear();
   for (const c of state.cams) {
@@ -160,17 +171,32 @@ function buildSpots() {
   }
 }
 
+function makeSpotMarker(spot) {
+  const on = state.selSpot === spot.key;
+  const fav = spot.cams.some(c => isFav(c.id));
+  const m = fav
+    ? L.marker([spot.lat, spot.lng], { icon: starIcon(on), zIndexOffset: 500 })
+    : L.circleMarker([spot.lat, spot.lng], markerStyle(on));
+  m.addTo(map)
+    .bindTooltip(shortName(spot.cams[0]), { className: "cam-tip", direction: "top", offset: [0, -8] })
+    .on("click", () => selectSpot(spot));
+  return m;
+}
+
 function renderMarkers() {
   for (const m of state.markers.values()) m.remove();
   state.markers.clear();
-  for (const spot of state.spots.values()) {
-    const on = state.selSpot === spot.key;
-    const m = L.circleMarker([spot.lat, spot.lng], markerStyle(on))
-      .addTo(map)
-      .bindTooltip(shortName(spot.cams[0]), { className: "cam-tip", direction: "top", offset: [0, -8] })
-      .on("click", () => selectSpot(spot));
-    state.markers.set(spot.key, m);
-  }
+  for (const spot of state.spots.values()) state.markers.set(spot.key, makeSpotMarker(spot));
+}
+
+/* swap a single spot's marker; a full re-render during a zoom animation can
+   corrupt leaflet's transition (map ends up at world zoom) */
+function refreshSpotMarker(key) {
+  const spot = state.spots.get(key);
+  if (!spot) return;
+  const old = state.markers.get(key);
+  if (old) old.remove();
+  state.markers.set(key, makeSpotMarker(spot));
 }
 
 /* ---------- selection ---------- */
@@ -307,6 +333,8 @@ function toggleFav(id) {
   saveFavs();
   updateFavBtn();
   updateNavCounts();
+  const cam = state.byId.get(id);
+  if (cam) refreshSpotMarker(spotKey(cam)); // star <-> dot for just this spot
   if (!$("favs").hidden) renderFavs();
   const star = listStars.get(id);
   if (star) {
