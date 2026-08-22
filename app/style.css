@@ -451,6 +451,8 @@ body {
 }
 
 /* ---- favorites page ---- */
+.favs-sort { border-bottom: none; padding: 0 0 14px; flex: 0 0 auto; }
+.chip.dim { opacity: .45; }
 .favs-list { display: flex; flex-direction: column; gap: 10px; max-width: 640px; }
 .fav-row {
   display: flex; align-items: center; gap: 12px;

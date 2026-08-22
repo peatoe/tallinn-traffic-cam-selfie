@@ -387,10 +387,34 @@ function rowGoesTo(row, cam) {
   row.onkeydown = (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(); } };
 }
 
+const FAVSORT_KEY = "tcs-favsort-v1";
+let favSort = (() => {
+  try { return sessionStorage.getItem(FAVSORT_KEY) || "added"; } catch (e) { return "added"; }
+})();
+
+function setFavSort(mode) {
+  if (mode === "near" && !state.user) {
+    toast("turn on location to sort by distance", 2600);
+    return;
+  }
+  favSort = mode;
+  try { sessionStorage.setItem(FAVSORT_KEY, mode); } catch (e) { /* fine */ }
+  renderFavs();
+}
+
 function renderFavs() {
   const list = $("favs-list");
   list.innerHTML = "";
+  /* sort chips: "nearest" needs a location; fall back to recently added */
+  const effective = favSort === "near" && !state.user ? "added" : favSort;
+  for (const b of document.querySelectorAll("#favs-sort .chip")) {
+    b.classList.toggle("on", b.dataset.sort === effective);
+    b.classList.toggle("dim", b.dataset.sort === "near" && !state.user);
+  }
   const cams = favs.map(id => state.cams.find(c => c.id === id)).filter(Boolean);
+  if (effective === "near") cams.sort((a, b) => haversine(state.user, a) - haversine(state.user, b));
+  else if (effective === "abc") cams.sort((a, b) => shortName(a).localeCompare(shortName(b), "et"));
+  /* "added" keeps the stored order: newest star first */
   if (!cams.length) {
     const p = document.createElement("p");
     p.className = "empty-note";
@@ -1022,6 +1046,7 @@ function onPosition(lat, lng, acc) {
   updateDistance();
   updateLine();
   updateListDists();
+  if (!$("favs").hidden) renderFavs(); // live distances and nearest-sort once located
 }
 
 function startLocating() {
@@ -1163,6 +1188,9 @@ function closeAway() {
 $("away-continue").onclick = closeAway;
 $("away").onclick = (e) => { if (e.target === $("away")) closeAway(); };
 $("nav-favs").onclick = () => { renderFavs(); $("favs").hidden = false; };
+document.querySelectorAll("#favs-sort .chip").forEach(b => {
+  b.onclick = () => setFavSort(b.dataset.sort);
+});
 $("favs-close").onclick = () => { $("favs").hidden = true; };
 $("nav-gallery").onclick = () => { renderGallery(); $("gallery").hidden = false; };
 $("gallery-close").onclick = () => { $("gallery").hidden = true; };
