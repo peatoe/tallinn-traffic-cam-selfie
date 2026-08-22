@@ -67,7 +67,9 @@ Useful URL params: `?at=59.449,24.735` fakes your location (desktop testing),
 - **your photos**: gallery of every shot, grouped by camera, newest first;
   tap a camera's name to jump to it on the map.
 - **favorites**: star cameras into a visit-later list with district and
-  live distance; tap a row to open the camera.
+  live distance; tap a row to open the camera. Favorited spots show as stars
+  on the map instead of dots (a multi-camera spot counts if any of its
+  cameras is starred).
 - **Safety copy**: photograph-yourself-only, traffic-law, and no-trespassing
   disclaimers on the camera sheet, the favorites page, the countdown, and in
   about & privacy. UI icons come from the Brand Estonia icon set.
