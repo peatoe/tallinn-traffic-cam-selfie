@@ -144,18 +144,19 @@ function spotKey(c) { return `${c.lat.toFixed(5)},${c.lng.toFixed(5)}`; }
 
 function markerStyle(on) {
   return {
-    radius: on ? 10 : 7,
-    color: "#fff", weight: 2, fillOpacity: 1,
+    radius: on ? 11 : 8,
+    color: "#fff", weight: 3, fillOpacity: 1,
     fillColor: on ? "#000087" : "#111",
+    className: "cam-dot", // drop shadow lives in css
   };
 }
 
 /* favorited spots show as a star instead of a dot (Brand Estonia star, filled) */
 function starIcon(on) {
-  const s = on ? 30 : 23;
+  const s = on ? 34 : 27;
   return L.divIcon({
     className: "",
-    html: `<svg viewBox="12 12 40 40" width="${s}" height="${s}"><path d="M41 47l-8.505-6.025L20 49l5-12.987-10-8.053h13L31.95 15l4.182 12.96L49 27.987l-9 8.026L45 49" fill="${on ? "#000087" : "#111"}" stroke="#fff" stroke-width="3" stroke-linejoin="round"/></svg>`,
+    html: `<svg class="cam-star" viewBox="10 10 44 44" width="${s}" height="${s}"><path d="M41 47l-8.505-6.025L20 49l5-12.987-10-8.053h13L31.95 15l4.182 12.96L49 27.987l-9 8.026L45 49" fill="${on ? "#000087" : "#111"}" stroke="#fff" stroke-width="4" stroke-linejoin="round"/></svg>`,
     iconSize: [s, s],
     iconAnchor: [s / 2, s / 2],
   });
