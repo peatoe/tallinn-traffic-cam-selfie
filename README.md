@@ -86,7 +86,11 @@ Useful URL params: `?at=59.449,24.735` fakes your location (desktop testing),
   disclaimers on the camera sheet, the favorites page, the countdown, and in
   about & privacy. UI icons come from the Brand Estonia icon set.
 - **Install as an app**: web app manifest and apple touch icon; on iPhone use
-  Share → Add to Home Screen for a standalone full-screen app.
+  Share → Add to Home Screen for a standalone full-screen app. After 30 s of
+  use, at a quiet moment, visitors get a small dismissible install card (at
+  most once every 30 days, never once installed): iOS Safari gets tap-share
+  instructions, Android browsers with `beforeinstallprompt` get a real
+  install button that opens the native dialog.
 - **Outside-Tallinn greeting**: visitors located more than 40 km away get a
   one-time explainer (per visit) and the map stays on Tallinn instead of
   jumping to their city. Suppressed when arriving via a shared `?cam=` link.
