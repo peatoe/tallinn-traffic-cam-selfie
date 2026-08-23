@@ -18,7 +18,7 @@ wave, and the app grabs the frames with you in them.
 
 Camera images come from the city's open camera service
 [ristmikud.tallinn.ee](https://ristmikud.tallinn.ee) (253 cameras, refreshed
-every few seconds). Design modeled after
+about once a second). Design modeled after
 [visitestonia.com](https://visitestonia.com/en): Aino Headline for titles,
 Aino for everything else (Brand Estonia's typefaces), lowercase headlines,
 black/white with deep-blue accents.
@@ -72,6 +72,14 @@ Useful URL params: `?at=59.449,24.735` fakes your location (desktop testing),
   readable from across the street, beeps, screen wake-lock, then a "smile!"
   flash and a 3-frame burst (at zero / +4 s / +8 s) since the cameras refresh
   every few seconds.
+- **record clip**: a 30 s time lapse of you from one camera. Tapping record
+  opens an intro (nothing starts until you hit start), then a quick 3-2-1 and
+  it records for 30 seconds, camcorder style: the view shows each frame as it
+  is captured, with a slowly blinking red dot, a 0:00-0:30 counter, and a
+  stop button. Plays back in
+  the app at 2/4/8 fps with pause and scrub. There is no video file: the
+  camera server sends no CORS headers, so frame pixels are unreadable to
+  JavaScript and no encoder can run. Screen record the playback for a video.
 - **your shots**: captured frames persist in the browser (metadata in
   localStorage, pixels in Cache Storage via a service worker, so they survive
   refresh without any server). Delete any shot via the x with confirmation.

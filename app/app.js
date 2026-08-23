@@ -251,6 +251,18 @@ function openSheet(spot, cam) {
   startPreview(cam);
   renderShots();
   $("sheet").hidden = false;
+  $("sheet").scrollTop = 0;
+  updateSheetShade();                      // layout is ready: set the state now
+  requestAnimationFrame(updateSheetShade); // and settle once painted
+}
+
+/* the bottom shade's opacity tracks how much is left to scroll: full while
+   plenty remains, melting away over the last 48px instead of snapping off */
+function updateSheetShade() {
+  const sh = $("sheet");
+  const remaining = sh.scrollHeight - sh.scrollTop - sh.clientHeight;
+  const o = Math.max(0, Math.min(1, remaining / 48));
+  sh.style.setProperty("--shade", o.toFixed(3));
 }
 
 function closeSheet() {
@@ -805,9 +817,11 @@ async function deleteShot(sid) {
   } catch { /* ignore */ }
 }
 
-function askConfirm() {
+function askConfirm(title = "delete this photo?", sub = "it will be removed from your shots in this browser.") {
   return new Promise((resolve) => {
     const box = $("confirm");
+    $("confirm-title").textContent = title;
+    $("confirm-sub").textContent = sub;
     const yes = $("confirm-yes"), no = $("confirm-no");
     const done = (v) => {
       box.hidden = true;
@@ -831,16 +845,59 @@ async function confirmDelete(sid, after) {
   }
 }
 
-async function addShot(url, cam, label) {
+async function addShot(url, cam, label, opts = {}) {
   const sid = `${Date.now()}-${Math.floor(Math.random() * 1e4)}`;
   sessionUrls.set(sid, url);
   const shot = { sid, camId: cam.id, label, when: new Date().toISOString(), stored: false };
+  if (opts.clip) { shot.clip = opts.clip; shot.seq = opts.seq; }
   shot.stored = await persistShot(sid, url);
   shots.unshift(shot);
+  if (opts.quiet) return shot; // a recording saves and renders once, at the end
   saveShots(shots);
   renderShots();
   updateNavCounts();
   return shot;
+}
+
+async function deleteClip(id) {
+  for (const f of framesOfClip(id)) await deleteShot(f.sid);
+}
+
+async function confirmDeleteClip(id, after) {
+  const n = framesOfClip(id).length;
+  if (await askConfirm("delete this clip?", `all ${n} frames will be removed from this browser.`)) {
+    await deleteClip(id);
+    renderShots();
+    if (!$("gallery").hidden) renderGallery();
+    updateNavCounts();
+    if (after) after();
+  }
+}
+
+function framesOfClip(id) {
+  return shots.filter(s => s.clip === id).sort((a, b) => a.seq - b.seq);
+}
+
+/* photos and clips, newest first; a clip collapses to one entry */
+function groupItems(list) {
+  const items = [], seen = new Set();
+  for (const s of list) {
+    if (!s.clip) { items.push({ type: "photo", shot: s }); continue; }
+    if (seen.has(s.clip)) continue;
+    seen.add(s.clip);
+    const frames = list.filter(x => x.clip === s.clip).sort((a, b) => a.seq - b.seq);
+    items.push({ type: "clip", id: s.clip, frames, shot: frames[0] });
+  }
+  return items;
+}
+
+function makeClipX(id, small, after) {
+  const x = document.createElement("button");
+  x.className = "shot-x" + (small ? " shot-x-sm" : "");
+  x.setAttribute("aria-label", "Delete clip");
+  x.textContent = "×";
+  x.onclick = (e) => { e.stopPropagation(); confirmDeleteClip(id, after); };
+  return x;
 }
 
 function makeShotX(sid, small, after) {
@@ -852,24 +909,38 @@ function makeShotX(sid, small, after) {
   return x;
 }
 
-/* one side-scrolling strip of thumbnails; used by the sheet and the gallery */
-function fillStrip(strip, list, withWhen) {
-  for (const s of list) {
+/* one side-scrolling strip of thumbnails; used by the sheet and the gallery.
+   takes grouped items, so a clip shows as a single badged thumbnail */
+function fillStrip(strip, items, withWhen) {
+  for (const it of items) {
     const wrap = document.createElement("div");
     wrap.className = "shot-thumb";
     const im = document.createElement("img");
-    im.src = shotSrc(s); im.alt = s.label;
+    im.src = shotSrc(it.shot);
+    im.alt = it.type === "clip" ? `clip, ${it.frames.length} frames` : it.shot.label;
     im.onclick = () => {
-      const cam = state.cams.find(c => c.id === s.camId) || state.sel;
-      showResult([s], cam);
+      if (it.type === "clip") { openClip(it.id); return; }
+      const cam = state.cams.find(c => c.id === it.shot.camId) || state.sel;
+      showResult([it.shot], cam);
     };
     im.onerror = () => { wrap.remove(); };
     wrap.appendChild(im);
-    wrap.appendChild(makeShotX(s.sid, true));
+    if (it.type === "clip") {
+      const b = document.createElement("div");
+      b.className = "clip-badge";
+      const dot = document.createElement("span");
+      dot.className = "rec-dot";
+      b.appendChild(dot);
+      b.appendChild(document.createTextNode(`${it.frames.length} frames`));
+      wrap.appendChild(b);
+      wrap.appendChild(makeClipX(it.id, true));
+    } else {
+      wrap.appendChild(makeShotX(it.shot.sid, true));
+    }
     if (withWhen) {
       const t = document.createElement("div");
       t.className = "shot-when";
-      t.textContent = fmtWhen(s.when);
+      t.textContent = fmtWhen(it.shot.when);
       wrap.appendChild(t);
     }
     strip.appendChild(wrap);
@@ -881,7 +952,7 @@ function renderShots() {
   strip.innerHTML = "";
   const mine = shots.filter(s => state.sel && s.camId === state.sel.id);
   $("shots").hidden = mine.length === 0;
-  fillStrip(strip, mine.slice(0, 20), false);
+  fillStrip(strip, groupItems(mine).slice(0, 20), false);
 }
 
 function pulseShots() {
@@ -927,13 +998,19 @@ function renderGallery() {
       h.classList.add("gal-cam-off");
     }
 
+    const items = groupItems(list);
+    const nClips = items.filter(i => i.type === "clip").length;
+    const nPhotos = items.length - nClips;
+    const parts = [];
+    if (nPhotos) parts.push(`${nPhotos} ${nPhotos === 1 ? "photo" : "photos"}`);
+    if (nClips) parts.push(`${nClips} ${nClips === 1 ? "clip" : "clips"}`);
     const meta = document.createElement("div");
     meta.className = "gal-meta";
-    meta.textContent = `${list.length} ${list.length === 1 ? "photo" : "photos"}`;
+    meta.textContent = parts.join(" · ");
 
     const strip = document.createElement("div");
     strip.className = "shots-strip";
-    fillStrip(strip, list, true);
+    fillStrip(strip, items, true);
 
     sec.appendChild(h);
     sec.appendChild(meta);
@@ -945,8 +1022,9 @@ function renderGallery() {
 /* ---------- nav counts ---------- */
 function updateNavCounts() {
   const g = $("count-gallery"), f = $("count-favs");
-  g.hidden = shots.length === 0;
-  g.textContent = shots.length;
+  const items = groupItems(shots).length;
+  g.hidden = items === 0;
+  g.textContent = items;
   f.hidden = favs.length === 0;
   f.textContent = favs.length;
 }
@@ -1029,7 +1107,7 @@ async function countdownPhoto(seconds) {
   num.classList.remove("hot");
   beep(1600, 0.5, 0.4);
 
-  /* burst: the cams refresh every few seconds — grab 3 frames to be safe */
+  /* burst: three chances to be in frame, spread over 8 s */
   const grabbed = [];
   const plan = [["at zero", 0], ["+4 s", 4000], ["+8 s", 8000]];
   const t0 = Date.now();
@@ -1051,6 +1129,170 @@ async function countdownPhoto(seconds) {
     if (grabbed.length) showResult(grabbed, cam);
     else toast("could not load camera frames. check your connection");
   }
+}
+
+/* ---------- clips: a time lapse from one camera ----------
+   the cams put out a new frame every second, so that is the sampling rate */
+const CLIP_FRAMES = 30;
+const CLIP_INTERVAL_MS = 1000;
+const CLIP_PREROLL = 3;
+
+let recAbort = null;
+let recPhase = "idle"; // idle | intro | count | live
+let recTimer = null;
+
+const fmtRec = (secs) => `0:${String(Math.floor(secs)).padStart(2, "0")}`;
+
+/* tapping record only opens the view; nothing runs until start is pressed */
+function openRecorder() {
+  if (!state.sel) return;
+  warnIfStorageTight();
+  recPhase = "intro";
+  $("rec-cam").textContent = shortName(state.sel);
+  $("rec-intro").hidden = false;
+  $("rec-num").hidden = true;
+  $("rec-stage").hidden = true;
+  $("rec-cancel").textContent = "cancel";
+  $("recorder").hidden = false;
+  keepAwake(true);
+}
+
+async function startRecording() {
+  const cam = state.sel;
+  if (!cam || recPhase !== "intro") return;
+  recAbort = { stop: false };
+  const my = recAbort;
+
+  recPhase = "count";
+  $("rec-intro").hidden = true;
+  const num = $("rec-num");
+  num.hidden = false;
+  for (let i = CLIP_PREROLL; i > 0; i--) {
+    if (my.stop) return;
+    num.textContent = i;
+    num.classList.add("hot");
+    num.classList.remove("tick"); void num.offsetWidth; num.classList.add("tick");
+    beep(1200, 0.12, 0.35);
+    await new Promise(r => setTimeout(r, 1000));
+  }
+  if (my.stop) return;
+
+  recPhase = "live";
+  num.hidden = true;
+  num.classList.remove("hot");
+  const img = $("rec-img");
+  img.src = BLANK_PX;
+  $("rec-stage").hidden = false;
+  $("rec-cancel").textContent = "stop";
+  beep(1600, 0.3, 0.35);
+
+  const clipId = `c${Date.now()}`;
+  const frames = [];
+  const t0 = Date.now();
+  $("rec-time").textContent = "0:00";
+  recTimer = setInterval(() => {
+    $("rec-time").textContent = fmtRec(Math.min(CLIP_FRAMES * CLIP_INTERVAL_MS / 1000, (Date.now() - t0) / 1000));
+  }, 250);
+
+  for (let i = 0; i < CLIP_FRAMES; i++) {
+    const wait = t0 + i * CLIP_INTERVAL_MS - Date.now();
+    if (wait > 0) await new Promise(r => setTimeout(r, wait));
+    if (my.stop) break;
+    const frame = await grabFrame(cam, `frame ${i + 1}`);
+    if (frame) {
+      if (!my.stop) img.src = frame.url; // the monitor shows the frame just captured
+      frames.push(await addShot(frame.url, cam, `frame ${i + 1}`, { clip: clipId, seq: i, quiet: true }));
+    }
+  }
+  beep(900, 0.25, 0.3);
+  finishRecording(my, frames, cam, clipId);
+}
+
+function finishRecording(abort, frames, cam, clipId) {
+  clearInterval(recTimer);
+  recTimer = null;
+  recPhase = "idle";
+  $("recorder").hidden = true;
+  keepAwake(false);
+  if (frames.length === 1) {                          // one frame is just a photo
+    delete frames[0].clip;
+    delete frames[0].seq;
+  }
+  saveShots(shots);
+  renderShots();
+  updateNavCounts();
+  if (!frames.length) {
+    if (!abort.stop) toast("could not load camera frames. check your connection");
+    return;
+  }
+  if (frames.length === 1) { showResult(frames, cam); return; }
+  openClip(clipId);
+}
+
+/* browsers evict browser storage under pressure; say so before a long capture */
+async function warnIfStorageTight() {
+  try {
+    const est = await navigator.storage.estimate();
+    if (est.quota && est.quota - est.usage < 25e6) toast("storage is nearly full. old shots may be evicted", 3600);
+  } catch (e) { /* not supported: carry on */ }
+}
+
+/* ---------- clip playback ---------- */
+const clip = { frames: [], i: 0, fps: 8, timer: null, id: null };
+
+function openClip(id) {
+  const frames = framesOfClip(id);
+  if (!frames.length) return;
+  clip.frames = frames; clip.i = 0; clip.id = id;
+  const cam = state.byId.get(frames[0].camId);
+  $("clip-title").textContent = cam ? shortName(cam) : "clip";
+  const scrub = $("clip-scrub");
+  scrub.max = String(frames.length - 1);
+  scrub.value = "0";
+  syncClipFps();
+  document.querySelector(".clip-stage").classList.remove("loaded");
+  $("clip").hidden = false;
+  showClipFrame(0);
+  /* the frames are already in Cache Storage, but decode them all before playing
+     so the first pass does not stutter */
+  Promise.all(frames.map(f => new Promise(r => {
+    const im = new Image();
+    im.onload = im.onerror = () => r();
+    im.src = shotSrc(f);
+  }))).then(() => { if (!$("clip").hidden && clip.id === id) clipPlay(true); });
+}
+
+function showClipFrame(i) {
+  const f = clip.frames[i];
+  if (!f) return;
+  clip.i = i;
+  const img = $("clip-img");
+  img.onload = () => document.querySelector(".clip-stage").classList.add("loaded");
+  img.src = shotSrc(f);
+  $("clip-scrub").value = String(i);
+  $("clip-meta").textContent = `frame ${i + 1} / ${clip.frames.length} · ${fmtWhen(f.when)}`;
+}
+
+function syncClipFps() {
+  for (const b of document.querySelectorAll(".clip-fps .chip")) {
+    b.classList.toggle("on", Number(b.dataset.fps) === clip.fps);
+  }
+}
+
+function clipPlay(on) {
+  clearInterval(clip.timer);
+  clip.timer = null;
+  $("clip-play").textContent = on ? "pause" : "play";
+  if (!on) return;
+  clip.timer = setInterval(() => {
+    showClipFrame((clip.i + 1) % clip.frames.length);   // loops
+  }, 1000 / clip.fps);
+}
+
+function closeClip() {
+  clipPlay(false);
+  $("clip").hidden = true;
+  clip.frames = []; clip.id = null;
 }
 
 /* ---------- result ---------- */
@@ -1183,7 +1425,31 @@ $("btn-locate").onclick = startLocating;
 $("btn-about").onclick = () => { $("about").hidden = false; };
 $("about-close").onclick = () => { $("about").hidden = true; };
 $("sheet-close").onclick = closeSheet;
+$("sheet").addEventListener("scroll", updateSheetShade, { passive: true });
+window.addEventListener("resize", () => { if (!$("sheet").hidden) updateSheetShade(); });
 $("btn-shot").onclick = photoNow;
+$("btn-record").onclick = openRecorder;
+$("rec-start").onclick = startRecording;
+$("rec-cancel").onclick = () => {
+  if (recPhase === "live") { if (recAbort) recAbort.stop = true; return; } // keeps what was captured
+  if (recAbort) recAbort.stop = true;
+  recPhase = "idle";
+  clearInterval(recTimer); recTimer = null;
+  $("recorder").hidden = true;
+  keepAwake(false);
+};
+$("clip-close").onclick = closeClip;
+$("clip-done").onclick = closeClip;
+$("clip-play").onclick = () => clipPlay(!clip.timer);
+$("clip-scrub").oninput = (e) => { clipPlay(false); showClipFrame(Number(e.target.value)); };
+document.querySelectorAll(".clip-fps .chip").forEach(b => {
+  b.onclick = () => {
+    clip.fps = Number(b.dataset.fps);
+    syncClipFps();
+    if (clip.timer) clipPlay(true); // restart at the new rate
+  };
+});
+$("clip-delete").onclick = () => confirmDeleteClip(clip.id, closeClip);
 document.querySelectorAll("[data-count]").forEach(b =>
   b.onclick = () => countdownPhoto(parseInt(b.dataset.count, 10)));
 $("countdown-cancel").onclick = () => {
