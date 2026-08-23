@@ -1,4 +1,15 @@
-[![Support Me](https://img.buymeacoffee.com/button-api/?text=Support%20Me&emoji=&slug=peatoe&button_colour=ffdd04&font_colour=000000&font_family=Poppins&outline_colour=000000&coffee_colour=FFDD00)](https://www.buymeacoffee.com/peatoe)
+<p align="center">
+  <a href="https://www.buymeacoffee.com/peatoe"><img src="https://img.buymeacoffee.com/button-api/?text=Support%20Me&emoji=&slug=peatoe&button_colour=ffdd04&font_colour=000000&font_family=Poppins&outline_colour=000000&coffee_colour=FFDD00" alt="Support Me"></a>
+</p>
+
+<p align="center">
+  <a href="https://github.com/peatoe/tallinn-traffic-cam-selfie/actions/workflows/pages.yml"><img src="https://github.com/peatoe/tallinn-traffic-cam-selfie/actions/workflows/pages.yml/badge.svg" alt="deploy"></a>
+  <a href="https://peatoe.github.io/tallinn-traffic-cam-selfie/"><img src="https://img.shields.io/website?url=https%3A%2F%2Fpeatoe.github.io%2Ftallinn-traffic-cam-selfie%2F&label=live%20site" alt="live site"></a>
+  <a href="https://github.com/peatoe/tallinn-traffic-cam-selfie/commits/main"><img src="https://img.shields.io/github/last-commit/peatoe/tallinn-traffic-cam-selfie?label=last%20update" alt="last update"></a>
+  <a href="https://peatoe.github.io/tallinn-traffic-cam-selfie/"><img src="https://img.shields.io/badge/platform-web%20%C2%B7%20add%20to%20home%20screen-000087" alt="platform: web, add to home screen"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-000087" alt="license: MIT"></a>
+</p>
+
 # tallinn cam selfie
 
 A mobile-first web app that turns Tallinn's public traffic cameras into selfie
@@ -120,6 +131,12 @@ without a key; production needs one (free tier at
 
 Without a key the deployed app automatically falls back to plain
 OpenStreetMap tiles, so nothing breaks; it just loses the blue toner look.
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md): no-dependency vanilla JS, the design
+rules (palette, Aino type, lowercase copy, Brand Estonia icons), iOS testing
+expectations, and how licensing applies to contributions.
 
 ## Licences & data sources
 
