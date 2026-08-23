@@ -23,6 +23,10 @@ Open http://localhost:8123 and use the test parameters:
   ones trigger the outside-Tallinn greeting)
 - `?cam=cam009` deep-links a camera (cam009 also shows the
   approximate-location notice)
+- `?a2hs=1` previews the install card's iOS variant (tap-share instructions)
+  in any browser, skipping the platform, snooze, and 30 s checks
+- `?a2hs=android` previews the install card's Android variant (native
+  install button)
 
 ## Ground rules
 
@@ -40,11 +44,14 @@ Open http://localhost:8123 and use the test parameters:
    `index.html` with `stroke="currentColor"` and the decorative outer circle
    removed. When you add one, credit it in both `THIRD-PARTY-NOTICES.md`
    files.
-5. **iOS is a first-class target.** Test on an iPhone (or at minimum Safari)
-   before opening a PR. Hard-won rules: no SVG `url()` filters on Leaflet
-   panes (Safari drops them; the map recolor happens on canvas instead),
-   `navigator.share`/clipboard need HTTPS, and the app must behave in
-   standalone (Add to Home Screen) mode.
+5. **Test on a real phone.** Check your change on an iPhone (Safari) or an
+   Android phone (Chrome), whichever you have; the `?a2hs=1` /
+   `?a2hs=android` parameters above preview both install-card variants from
+   any browser. Hard-won rules that bite on phones: no SVG `url()` filters
+   on Leaflet panes (Safari drops them; the map recolor happens on canvas
+   instead); `navigator.share`, the clipboard, and Android's install prompt
+   all need HTTPS; and the app must behave in standalone (installed) mode
+   on both platforms.
 6. **Be gentle with the camera server.** The list view loads through a
    bounded queue and refreshes only what is on screen. Do not add polling or
    bulk fetching beyond it.
@@ -59,6 +66,8 @@ only for cameras marked `"approx": true`, and prefer fixing the generator.
 
 - Keep commits small with lowercase, present-tense messages
   ("add favorites sorting").
+- Say which device(s) you tested on (e.g. "tested on iPhone 15, Safari").
+  A PR without a tested device named will be asked for one.
 - UI changes: include a before/after screenshot, and check both the 375 px
   phone width and a desktop width.
 - If you touched licensing-relevant things (assets, data, embedded works),
