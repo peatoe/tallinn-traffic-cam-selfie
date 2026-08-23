@@ -450,12 +450,10 @@ body {
 /* the player sits above the gallery, like the photo viewer */
 #clip { z-index: 2200; }
 .clip-stage {
-  /* square corners and no border: the playback gets screen recorded, and any
-     rounding or hairline at the edge survives into the cropped video */
   position: relative; overflow: hidden;
   background: var(--mist); aspect-ratio: 16/9;
-  width: min(100%, calc(72vh * 16 / 9));
-  width: min(100%, calc(72svh * 16 / 9));
+  width: min(100%, calc(100vh * 16 / 9));
+  width: min(100%, calc(100svh * 16 / 9));
   margin-inline: auto;
 }
 .clip-stage img { width: 100%; height: 100%; object-fit: cover; display: block; position: relative; z-index: 1; }
