@@ -260,9 +260,10 @@ function openSheet(spot, cam) {
    plenty remains, melting away over the last 48px instead of snapping off */
 function updateSheetShade() {
   const sh = $("sheet");
+  const clamp = (v) => Math.max(0, Math.min(1, v)).toFixed(3);
   const remaining = sh.scrollHeight - sh.scrollTop - sh.clientHeight;
-  const o = Math.max(0, Math.min(1, remaining / 48));
-  sh.style.setProperty("--shade", o.toFixed(3));
+  sh.style.setProperty("--shade", clamp(remaining / 48));
+  sh.style.setProperty("--shade-top", clamp(sh.scrollTop / 48));
 }
 
 function closeSheet() {

@@ -257,9 +257,9 @@ body {
   background: var(--paper);
   border-radius: var(--sheet-r) var(--sheet-r) 0 0;
   box-shadow: 0 -8px 40px rgba(0,0,0,.22);
-  /* no bottom padding: the last child carries it, so the sticky scroll shade
-     can pin to the true bottom edge of the window */
-  padding: 18px var(--pad) 0;
+  /* no top or bottom padding: the first and last children carry it, so the
+     sticky scroll shades can pin to the true edges of the window */
+  padding: 0 var(--pad);
   z-index: 1100;
   max-height: 78vh; overflow-y: auto;
   animation: rise .22s ease-out;
@@ -275,6 +275,7 @@ body {
   font-family: var(--headline); font-weight: 400;
   font-size: 24px; line-height: 1.15;
   text-transform: lowercase;
+  padding-top: 18px; /* carries the sheet's top breathing room (see .sheet) */
   padding-right: 140px; /* room for the share + star + close buttons */
 }
 .sheet-meta {
@@ -563,12 +564,19 @@ body {
   bottom: 0;
   height: 34px;
   margin: -34px calc(-1 * var(--pad)) 0;
-  background: linear-gradient(to bottom, rgba(0, 0, 25, 0), rgba(0, 0, 25, .15));
+  background: linear-gradient(to bottom, rgba(0, 0, 25, 0), rgba(0, 0, 25, .25));
   pointer-events: none;
   /* driven by --shade: fades in over the last stretch of scroll instead of
      snapping at a threshold */
   opacity: var(--shade, 0);
   transition: opacity .35s ease;
+}
+/* mirror at the top: appears once scrolled, signalling the way back up */
+.sheet-shade-top {
+  top: 0; bottom: auto;
+  margin: 0 calc(-1 * var(--pad)) -34px; /* hangs over the content below it */
+  background: linear-gradient(to top, rgba(0, 0, 25, 0), rgba(0, 0, 25, .25));
+  opacity: var(--shade-top, 0);
 }
 
 /* ---- fav + share buttons on the sheet ---- */
