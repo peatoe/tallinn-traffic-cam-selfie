@@ -651,7 +651,7 @@ function maybeOfferA2hs() {
     } catch (e) { /* show anyway */ }
   }
   let tries = 0;
-  const overlays = ["sheet", "result", "gallery", "favs", "about", "countdown", "confirm", "away"];
+  const overlays = ["sheet", "result", "gallery", "favs", "about", "countdown", "confirm", "away", "welcome"];
   const attempt = () => {
     if (overlays.some(id => !$(id).hidden)) {      // busy: wait for a quiet moment
       if (++tries < 10) setTimeout(attempt, 10000);
@@ -1340,8 +1340,20 @@ function userIsFar() {
   return !!state.user && haversine(state.user, TLL_CENTER) > AWAY_M;
 }
 
+/* first visit ever: one card saying what this is. localStorage, so it never
+   comes back; if storage is blocked, skip rather than nag every visit */
+const WELCOME_KEY = "tcs-welcome-v1";
+function maybeShowWelcome() {
+  try {
+    if (localStorage.getItem(WELCOME_KEY)) return;
+    localStorage.setItem(WELCOME_KEY, "1");
+  } catch (e) { return; }
+  $("welcome").hidden = false;
+}
+
 function maybeShowAway() {
   if (!userIsFar() || new URLSearchParams(location.search).get("cam")) return;
+  if (!$("welcome").hidden) { state.awayPending = true; return; } // welcome goes first
   try {
     if (sessionStorage.getItem(AWAY_KEY)) return;
     sessionStorage.setItem(AWAY_KEY, "1");
@@ -1412,6 +1424,7 @@ async function boot() {
     console.error(e);
   }
   updateNavCounts();
+  maybeShowWelcome();
   maybeOfferA2hs();
 
   const camParam = new URLSearchParams(location.search).get("cam");
@@ -1524,6 +1537,12 @@ $("btn-fav").onclick = () => {
 };
 $("view-map").onclick = () => setView("map");
 $("view-list").onclick = () => setView("list");
+function closeWelcome() {
+  $("welcome").hidden = true;
+  if (state.awayPending) { state.awayPending = false; maybeShowAway(); }
+}
+$("welcome-continue").onclick = closeWelcome;
+$("welcome").onclick = (e) => { if (e.target === $("welcome")) closeWelcome(); };
 function closeAway() {
   $("away").hidden = true;
   map.setView(TLL_CENTER, TLL_ZOOM);

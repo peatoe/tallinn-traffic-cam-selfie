@@ -99,6 +99,9 @@ Useful URL params: `?at=59.449,24.735` fakes your location (desktop testing),
   most once every 30 days, never once installed): iOS Safari gets tap-share
   instructions, Android browsers with `beforeinstallprompt` get a real
   install button that opens the native dialog.
+- **First-visit welcome**: a one-time card (per browser) saying what the
+  project is and that it is unaffiliated with the city or Brand Estonia.
+  Shows before the outside-Tallinn greeting when both apply.
 - **Outside-Tallinn greeting**: visitors located more than 40 km away get a
   one-time explainer (per visit) and the map stays on Tallinn instead of
   jumping to their city. Suppressed when arriving via a shared `?cam=` link.

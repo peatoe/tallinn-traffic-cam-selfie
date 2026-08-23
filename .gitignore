@@ -1,6 +1,5 @@
 .DS_Store
 *.log
-.claude/settings.local.json
+.claude/
 .env
 app/config.js
-.claude/
