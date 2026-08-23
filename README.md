@@ -1,4 +1,4 @@
-[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/C3P325H540)
+[![Support Me](https://img.buymeacoffee.com/button-api/?text=Support%20Me&emoji=&slug=peatoe&button_colour=ffdd04&font_colour=000000&font_family=Poppins&outline_colour=000000&coffee_colour=FFDD00)](https://www.buymeacoffee.com/peatoe)
 # tallinn cam selfie
 
 A mobile-first web app that turns Tallinn's public traffic cameras into selfie
