@@ -778,7 +778,10 @@ function saveShots(list) {
 }
 let shots = loadShots(); // [{sid, camId, label, when, stored}]
 
+/* The live ?t= url is not safe to reuse, because the city sends no cache-control and ignores the timestamp. */
 function shotSrc(s) {
+  const swReady = !!(navigator.serviceWorker && navigator.serviceWorker.controller);
+  if (s.stored && swReady) return `shots/${s.sid}`;
   return sessionUrls.get(s.sid) || `shots/${s.sid}`;
 }
 
