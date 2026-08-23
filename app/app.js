@@ -1140,7 +1140,6 @@ const CLIP_PREROLL = 3;
 
 let recAbort = null;
 let recPhase = "idle"; // idle | intro | count | live
-let recTimer = null;
 
 const fmtRec = (secs) => `0:${String(Math.floor(secs)).padStart(2, "0")}`;
 
@@ -1191,9 +1190,6 @@ async function startRecording() {
   const frames = [];
   const t0 = Date.now();
   $("rec-time").textContent = "0:00";
-  recTimer = setInterval(() => {
-    $("rec-time").textContent = fmtRec(Math.min(CLIP_FRAMES * CLIP_INTERVAL_MS / 1000, (Date.now() - t0) / 1000));
-  }, 250);
 
   for (let i = 0; i < CLIP_FRAMES; i++) {
     const wait = t0 + i * CLIP_INTERVAL_MS - Date.now();
@@ -1203,6 +1199,7 @@ async function startRecording() {
     if (frame) {
       if (!my.stop) img.src = frame.url; // the monitor shows the frame just captured
       frames.push(await addShot(frame.url, cam, `frame ${i + 1}`, { clip: clipId, seq: i, quiet: true }));
+      $("rec-time").textContent = fmtRec(frames.length); 
     }
   }
   beep(900, 0.25, 0.3);
@@ -1210,8 +1207,6 @@ async function startRecording() {
 }
 
 function finishRecording(abort, frames, cam, clipId) {
-  clearInterval(recTimer);
-  recTimer = null;
   recPhase = "idle";
   $("recorder").hidden = true;
   keepAwake(false);
@@ -1470,7 +1465,6 @@ $("rec-cancel").onclick = () => {
   if (recPhase === "live") { if (recAbort) recAbort.stop = true; return; } // keeps what was captured
   if (recAbort) recAbort.stop = true;
   recPhase = "idle";
-  clearInterval(recTimer); recTimer = null;
   $("recorder").hidden = true;
   keepAwake(false);
 };
