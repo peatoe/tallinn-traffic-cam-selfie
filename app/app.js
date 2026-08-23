@@ -1169,8 +1169,7 @@ async function boot() {
   maybeOfferA2hs();
 
   const camParam = new URLSearchParams(location.search).get("cam");
-  state.awaySuppressed = !!camParam; // shared camera link: skip the greeting
-  startLocating(); // after the flag: the ?at= path fires onPosition synchronously
+  startLocating();
   if (camParam) {
     const c = state.cams.find(x => x.id === camParam);
     if (c) selectSpot(state.spots.get(spotKey(c)), c.id);
