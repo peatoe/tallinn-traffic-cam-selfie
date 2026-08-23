@@ -186,6 +186,48 @@ body {
   100% { box-shadow: 0 0 0 2px var(--accent), 0 0 0 0 rgba(0,0,135,0); }
 }
 
+/* ---- ios add-to-home-screen install card ---- */
+.a2hs {
+  position: fixed; left: 50%; transform: translateX(-50%);
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 18px);
+  z-index: 1050; /* over the map and list, under sheets and dialogs */
+  background: var(--paper); color: var(--ink);
+  width: min(92vw, 360px);
+  border-radius: var(--sheet-r);
+  box-shadow: 0 12px 50px rgba(0, 0, 20, .3);
+  padding: 20px 18px 0;
+  text-align: center;
+  animation: rise .22s ease-out;
+}
+.a2hs::after {
+  content: ""; position: absolute; bottom: -5px; left: 50%;
+  width: 12px; height: 12px; background: var(--paper);
+  transform: translateX(-50%) rotate(45deg);
+}
+.a2hs-icon {
+  width: 56px; height: 56px; border-radius: 13px;
+  display: block; margin: 0 auto 10px;
+}
+.a2hs-title {
+  font-family: var(--headline); font-weight: 400;
+  font-size: 22px; text-transform: lowercase;
+}
+.a2hs-sub { font-size: 13.5px; color: #777; line-height: 1.45; margin-top: 6px; }
+.a2hs-how {
+  border-top: 1px solid var(--line);
+  margin-top: 16px; padding: 13px 0 15px;
+  font-weight: 700; font-size: 14px; text-transform: lowercase;
+  display: flex; align-items: center; justify-content: center; gap: 7px;
+}
+.a2hs-how .ico { color: var(--accent); top: 0; }
+.a2hs-install { width: 100%; margin: 16px 0 18px; }
+.a2hs-x {
+  position: absolute; top: 10px; right: 10px;
+  width: 30px; height: 30px; border-radius: 50%; border: none;
+  background: var(--mist); color: var(--ink);
+  font-size: 17px; line-height: 1; cursor: pointer;
+}
+
 .status {
   position: absolute; left: 50%; transform: translateX(-50%);
   bottom: calc(env(safe-area-inset-bottom, 0px) + 18px);
@@ -366,6 +408,7 @@ body {
 }
 
 /* ---- result ---- */
+#result { z-index: 2200; }
 .result {
   position: fixed; inset: 0; z-index: 2100;
   background: var(--paper);
