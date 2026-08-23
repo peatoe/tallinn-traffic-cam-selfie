@@ -1441,6 +1441,28 @@ $("about-close").onclick = () => { $("about").hidden = true; };
 $("sheet-close").onclick = closeSheet;
 $("sheet").addEventListener("scroll", updateSheetShade, { passive: true });
 window.addEventListener("resize", () => { if (!$("sheet").hidden) updateSheetShade(); });
+
+/* ios home-screen app: rotating mid-scroll can scroll the document out from
+   under overflow:hidden and leave the open scroller eating every touch.
+   after a rotation, pin the document back and rebuild visible scrollers. */
+function settleAfterRotate() {
+  window.scrollTo(0, 0);
+  for (const id of ["sheet", "clip", "result", "gallery", "favs", "about"]) {
+    const el = $(id);
+    if (el.hidden) continue;
+    const top = el.scrollTop;
+    el.style.overflowY = "hidden";
+    void el.offsetHeight;
+    el.style.overflowY = "";
+    el.scrollTop = top;
+  }
+}
+function onRotate() {
+  settleAfterRotate();
+  setTimeout(settleAfterRotate, 400); // ios settles the viewport late
+}
+window.addEventListener("orientationchange", onRotate);
+if (screen.orientation) screen.orientation.addEventListener("change", onRotate);
 $("btn-shot").onclick = photoNow;
 $("btn-record").onclick = openRecorder;
 $("rec-start").onclick = startRecording;
