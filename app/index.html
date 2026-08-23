@@ -104,6 +104,7 @@
     <button class="btn btn-dark" data-count="5"><svg class="ico" width="15" height="15" aria-hidden="true"><use href="#i-clock"/></svg> 5 s</button>
     <button class="btn btn-dark" data-count="10"><svg class="ico" width="15" height="15" aria-hidden="true"><use href="#i-clock"/></svg> 10 s</button>
     <button class="btn btn-dark" data-count="30"><svg class="ico" width="15" height="15" aria-hidden="true"><use href="#i-clock"/></svg> 30 s</button>
+    <button class="btn btn-ghost" id="btn-record"><span class="rec-dot" aria-hidden="true"></span> record clip</button>
   </div>
 
   <div class="directions">
@@ -124,6 +125,7 @@
   <p class="safety-note">photograph yourself, not strangers. follow traffic and
   safety laws on the way and while posing. stay on sidewalks and public paths.
   no trespassing.</p>
+  <div class="sheet-shade" aria-hidden="true"></div>
 </section>
 
 <!-- about & privacy -->
@@ -244,8 +246,8 @@ access and a better experience</div>
 <!-- delete confirmation -->
 <div class="confirm" id="confirm" hidden>
   <div class="confirm-card">
-    <h2 class="confirm-title">delete this photo?</h2>
-    <div class="confirm-sub">it will be removed from your shots in this browser.</div>
+    <h2 class="confirm-title" id="confirm-title">delete this photo?</h2>
+    <div class="confirm-sub" id="confirm-sub">it will be removed from your shots in this browser.</div>
     <div class="confirm-actions">
       <button class="btn btn-ghost" id="confirm-no">keep it</button>
       <button class="btn btn-danger" id="confirm-yes">delete</button>
@@ -261,6 +263,27 @@ access and a better experience</div>
   <button class="btn btn-ghost countdown-cancel" id="countdown-cancel">cancel</button>
 </div>
 
+<!-- clip recorder -->
+<div class="countdown" id="recorder" hidden>
+  <div class="countdown-cam" id="rec-cam"></div>
+  <div class="rec-intro" id="rec-intro">
+    <p class="rec-explain">records 30 seconds. This is the minimum recording time to see a good video</p>
+    <button class="btn btn-primary btn-rec-start" id="rec-start">
+      <span class="rec-dot" aria-hidden="true"></span> start recording
+    </button>
+  </div>
+  <div class="countdown-num" id="rec-num" hidden>3</div>
+  <div class="rec-stage" id="rec-stage" hidden>
+    <img id="rec-img" alt="Live view from the camera while recording" draggable="false">
+    <div class="rec-indicator">
+      <span class="rec-dot rec-blink" aria-hidden="true"></span>
+      <span id="rec-time">0:00</span>
+    </div>
+  </div>
+  <div class="countdown-hint">get in front of the camera & wave. stay off the road</div>
+  <button class="btn btn-ghost countdown-cancel" id="rec-cancel">cancel</button>
+</div>
+
 <!-- photo result -->
 <div class="result" id="result" hidden>
   <button class="sheet-close" id="result-close" aria-label="Close">×</button>
@@ -272,6 +295,44 @@ access and a better experience</div>
   <div class="result-actions">
     <button class="btn btn-primary" id="btn-again"><svg class="ico" width="17" height="17" aria-hidden="true"><use href="#i-loop"/></svg> again</button>
     <button class="btn btn-dark" id="btn-done">done</button>
+  </div>
+</div>
+
+<!-- clip player -->
+<div class="result" id="clip" hidden>
+  <button class="sheet-close" id="clip-close" aria-label="Close">×</button>
+  <h2 class="result-title" id="clip-title">clip</h2>
+  <div class="clip-stage">
+    <img id="clip-img" alt="Clip frame" draggable="false">
+    <div class="cam-loading" id="clip-loading">
+      <svg class="ico" width="26" height="26" aria-hidden="true"><use href="#i-loading"/></svg>
+    </div>
+  </div>
+  <div class="clip-bar">
+    <button class="btn btn-primary" id="clip-play">pause</button>
+    <input class="clip-scrub" id="clip-scrub" type="range" min="0" max="0" value="0" step="1" aria-label="Frame">
+  </div>
+  <div class="clip-sub">
+    <div class="clip-meta" id="clip-meta"></div>
+    <div class="clip-fps-wrap">
+      <span class="clip-fps-label">speed</span>
+      <div class="seg clip-fps" role="group" aria-label="Playback speed">
+        <button class="chip" data-fps="2">2</button>
+        <button class="chip" data-fps="4">4</button>
+        <button class="chip on" data-fps="8">8</button>
+      </div>
+    </div>
+  </div>
+  <div class="result-note result-note-left clip-note">
+    <p>to keep it as a video, screen record this playback:</p>
+    <ul>
+      <li><b>iphone:</b> open control center, tap the record button, then come back and press play.</li>
+      <li><b>android:</b> open quick settings, tap screen record, then come back and press play.</li>
+    </ul>
+  </div>
+  <div class="result-actions">
+    <button class="btn btn-dark" id="clip-done">done</button>
+    <button class="btn btn-danger" id="clip-delete">delete clip</button>
   </div>
 </div>
 

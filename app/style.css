@@ -257,7 +257,9 @@ body {
   background: var(--paper);
   border-radius: var(--sheet-r) var(--sheet-r) 0 0;
   box-shadow: 0 -8px 40px rgba(0,0,0,.22);
-  padding: 18px var(--pad) calc(env(safe-area-inset-bottom, 0px) + 18px);
+  /* no bottom padding: the last child carries it, so the sticky scroll shade
+     can pin to the true bottom edge of the window */
+  padding: 18px var(--pad) 0;
   z-index: 1100;
   max-height: 78vh; overflow-y: auto;
   animation: rise .22s ease-out;
@@ -407,6 +409,99 @@ body {
   font-family: var(--headline); font-size: 9vmin; text-transform: lowercase;
 }
 
+/* ---- clip recorder: intro, 3-2-1, then a live monitor ---- */
+#recorder { gap: 16px; }
+.rec-intro { display: flex; flex-direction: column; align-items: center; gap: 22px; }
+.rec-explain {
+  font-size: 16px; color: #ccc; line-height: 1.5;
+  text-transform: lowercase; letter-spacing: .03em; max-width: 30ch;
+}
+.btn-rec-start { font-size: 17px; padding: 15px 26px; }
+.rec-stage {
+  position: relative; width: min(92vw, 720px);
+  aspect-ratio: 16/9; background: #111;
+  border-radius: 14px; overflow: hidden;
+}
+.rec-stage img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.rec-indicator {
+  position: absolute; top: 10px; left: 10px;
+  display: inline-flex; align-items: center; gap: 7px;
+  background: rgba(0, 0, 0, .55); color: #fff;
+  font-size: 13px; font-weight: 700; letter-spacing: .06em;
+  font-variant-numeric: tabular-nums;
+  padding: 5px 10px; border-radius: 999px;
+}
+.rec-blink { animation: recblink 1.6s ease-in-out infinite; }
+@keyframes recblink { 0%, 100% { opacity: 1; } 50% { opacity: .15; } }
+
+/* ---- clip recording + playback ---- */
+.actions #btn-record { grid-column: 1 / -1; }
+.rec-dot {
+  width: 11px; height: 11px; border-radius: 50%;
+  background: #d92b1c; flex: 0 0 auto;
+}
+/* the player sits above the gallery, like the photo viewer */
+#clip { z-index: 2200; }
+.clip-stage {
+  position: relative; border-radius: 14px; overflow: hidden;
+  background: var(--mist); aspect-ratio: 16/9;
+  border: 1px solid var(--line);
+}
+.clip-stage img { width: 100%; height: 100%; object-fit: cover; display: block; position: relative; z-index: 1; }
+.clip-stage.loaded .cam-loading { display: none; }
+.clip-bar {
+  display: flex; align-items: center; gap: 10px; margin-top: 12px;
+}
+.clip-bar .btn { padding: 10px 16px; flex: 0 0 auto; min-width: 92px; }
+.clip-bar .chip { flex: 0 0 auto; }
+.clip-scrub {
+  flex: 1; min-width: 0; height: 4px; margin: 0;
+  -webkit-appearance: none; appearance: none;
+  background: var(--line); border-radius: 999px; outline: none;
+}
+.clip-scrub::-webkit-slider-thumb {
+  -webkit-appearance: none; appearance: none;
+  width: 18px; height: 18px; border-radius: 50%;
+  background: var(--accent); border: 2px solid var(--paper);
+  box-shadow: 0 1px 4px rgba(0, 0, 20, .35); cursor: pointer;
+}
+.clip-scrub::-moz-range-thumb {
+  width: 18px; height: 18px; border-radius: 50%;
+  background: var(--accent); border: 2px solid var(--paper); cursor: pointer;
+}
+.clip-sub {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 10px; flex-wrap: wrap; margin-top: 10px;
+}
+.clip-meta { font-size: 12px; color: #777; }
+.clip-fps-wrap { display: inline-flex; align-items: center; gap: 8px; margin-left: auto; }
+.clip-fps-label {
+  font-size: 11px; font-weight: 700; letter-spacing: .08em;
+  text-transform: lowercase; color: #777;
+}
+.clip-fps { margin-left: 0; }
+.clip-fps .chip { padding: 5px 12px; font-variant-numeric: tabular-nums; }
+.clip-note {
+  line-height: 1.5;
+  background: var(--mist); border: 1px solid var(--line);
+  border-radius: 12px; padding: 12px 14px;
+  color: #444;
+}
+.clip-note p { margin: 0 0 7px; }
+.clip-note ul { margin: 0; padding-left: 17px; }
+.clip-note li { margin: 3px 0; }
+/* a clip shows as one thumbnail with its frame count */
+/* top-left, opposite the delete x: the wrapper also holds the date caption
+   below the thumbnail, so anchoring to the bottom covered it */
+.clip-badge {
+  position: absolute; top: 3px; left: 3px; z-index: 2;
+  background: rgba(0, 0, 0, .62); color: #fff;
+  font-size: 9.5px; font-weight: 700; letter-spacing: .04em;
+  padding: 2px 6px; border-radius: 999px;
+  display: inline-flex; align-items: center; gap: 4px;
+}
+.clip-badge .rec-dot { width: 6px; height: 6px; }
+
 /* ---- result ---- */
 #result { z-index: 2200; }
 .result {
@@ -461,6 +556,21 @@ body {
 }
 .shot-fig { position: relative; }
 
+/* a soft shadow hugging the sheet's bottom edge while more content is
+   below the fold; the scroll listener drives --shade */
+.sheet-shade {
+  position: sticky;
+  bottom: 0;
+  height: 34px;
+  margin: -34px calc(-1 * var(--pad)) 0;
+  background: linear-gradient(to bottom, rgba(0, 0, 25, 0), rgba(0, 0, 25, .15));
+  pointer-events: none;
+  /* driven by --shade: fades in over the last stretch of scroll instead of
+     snapping at a threshold */
+  opacity: var(--shade, 0);
+  transition: opacity .35s ease;
+}
+
 /* ---- fav + share buttons on the sheet ---- */
 .sheet-fav {
   right: 56px; color: var(--ink);
@@ -491,6 +601,8 @@ body {
 .safety-note {
   font-size: 12px; color: #777; line-height: 1.5;
   margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--line);
+  /* carries the sheet's bottom breathing room (see .sheet) */
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 18px);
 }
 
 /* ---- favorites page ---- */
