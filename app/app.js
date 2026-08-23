@@ -210,11 +210,7 @@ function selectSpot(spot, camId) {
   openSheet(spot, cam);
   updateLine();
   const target = L.latLng(spot.lat, spot.lng);
-  if (state.user && !userIsFar()) { // fitting a far-away user would zoom out past the city
-    map.fitBounds(L.latLngBounds([state.user, target]).pad(0.25));
-  } else {
-    map.setView(target, Math.max(map.getZoom(), 15));
-  }
+  map.setView(target, Math.max(map.getZoom(), 15)); // keep the browsing zoom, only zoom in from a city-wide view
 }
 
 function openSheet(spot, cam) {
