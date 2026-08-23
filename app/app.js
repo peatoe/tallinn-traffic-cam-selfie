@@ -599,6 +599,77 @@ document.addEventListener("visibilitychange", () => {
   if (!document.hidden && state.view === "list") refreshListFeeds();
 });
 
+/* ---------- ios add-to-home-screen hint ----------
+   safari on iphone/ipad only, never when already installed, after 30 s of
+   use at a quiet moment, dismissible, and at most once every 30 days */
+const A2HS_KEY = "tcs-a2hs-v1";
+const A2HS_DELAY_MS = 30000;
+const A2HS_SNOOZE_MS = 30 * 86400000;
+
+/* android (chrome/edge/samsung): the browser hands us a native install
+   prompt; the card then shows a real install button instead of instructions */
+let deferredInstall = null;
+window.addEventListener("beforeinstallprompt", (e) => {
+  e.preventDefault();
+  deferredInstall = e;
+});
+window.addEventListener("appinstalled", () => {
+  deferredInstall = null;
+  $("a2hs").hidden = true;
+});
+
+function isIosSafari() {
+  const ua = navigator.userAgent;
+  const ios = /iPhone|iPad|iPod/.test(ua) ||
+    (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1); // ipados
+  const safari = /Safari\//.test(ua) && !/CriOS|FxiOS|EdgiOS|OPiOS|GSA/.test(ua);
+  return ios && safari;
+}
+
+function maybeOfferA2hs() {
+  const force = new URLSearchParams(location.search).get("a2hs"); // "1" = ios preview, "android" = android preview
+  if (!force) {
+    if (navigator.standalone) return;             // already on the home screen
+    if (matchMedia("(display-mode: standalone)").matches) return;
+    if (!isIosSafari() && !/Android/.test(navigator.userAgent)) return;
+    try {
+      const last = Number(localStorage.getItem(A2HS_KEY)) || 0;
+      if (Date.now() - last < A2HS_SNOOZE_MS) return;
+    } catch (e) { /* show anyway */ }
+  }
+  let tries = 0;
+  const overlays = ["sheet", "result", "gallery", "favs", "about", "countdown", "confirm", "away"];
+  const attempt = () => {
+    if (overlays.some(id => !$(id).hidden)) {      // busy: wait for a quiet moment
+      if (++tries < 10) setTimeout(attempt, 10000);
+      return;
+    }
+    const ios = force === "1" || (!force && isIosSafari());
+    const android = force === "android" || (!force && !ios && !!deferredInstall);
+    if (!ios && !android) {                        // android's prompt event may still be coming
+      if (++tries < 10) setTimeout(attempt, 10000);
+      return;
+    }
+    $("a2hs-how").hidden = !ios;
+    $("a2hs-install").hidden = !android;
+    $("a2hs").hidden = false;
+    try { localStorage.setItem(A2HS_KEY, String(Date.now())); } catch (e) { /* fine */ }
+    setTimeout(() => { $("a2hs").hidden = true; }, 22000);
+  };
+  setTimeout(attempt, force ? 1500 : A2HS_DELAY_MS);
+}
+
+$("a2hs-install").onclick = async () => {
+  const p = deferredInstall;
+  $("a2hs").hidden = true;
+  if (!p) return; // dev preview without a real prompt
+  deferredInstall = null;
+  p.prompt();
+  try { await p.userChoice; } catch (e) { /* dismissed */ }
+};
+
+$("a2hs-x").onclick = () => { $("a2hs").hidden = true; };
+
 function renderList() {
   const box = $("list");
   /* keep already-loaded frames across a re-render (e.g. the nearest-first re-sort) */
@@ -1095,9 +1166,11 @@ async function boot() {
     console.error(e);
   }
   updateNavCounts();
-  startLocating();
+  maybeOfferA2hs();
 
   const camParam = new URLSearchParams(location.search).get("cam");
+  state.awaySuppressed = !!camParam; // shared camera link: skip the greeting
+  startLocating(); // after the flag: the ?at= path fires onPosition synchronously
   if (camParam) {
     const c = state.cams.find(x => x.id === camParam);
     if (c) selectSpot(state.spots.get(spotKey(c)), c.id);
