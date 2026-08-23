@@ -14,5 +14,5 @@ printf 'window.APP_CONFIG = { stadiaApiKey: "%s" };\n' "$STADIA_API_KEY" > app/c
 if [ -n "$STADIA_API_KEY" ]; then
   echo "wrote app/config.js (with API key)"
 else
-  echo "wrote app/config.js (no key: localhost is keyless, prod falls back to OSM)"
+  echo "wrote app/config.js (no key: localhost and domain-registered prod are keyless)"
 fi

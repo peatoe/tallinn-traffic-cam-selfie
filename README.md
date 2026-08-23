@@ -118,23 +118,23 @@ repository **Settings → Pages → Source: GitHub Actions**. The app then lives
 at `https://<user>.github.io/<repo>/` with HTTPS, which enables geolocation
 and photo persistence on phones.
 
-### Map tiles API key (Stadia Maps)
+### Map tiles (Stadia Maps)
 
-The map uses Stamen Toner tiles hosted by Stadia Maps. localhost works
-without a key; production needs one (free tier at
-[stadiamaps.com](https://stadiamaps.com/)):
+The map uses Stamen Toner tiles hosted by Stadia Maps. localhost needs no
+setup at all. For production, use **domain authentication** instead of an
+API key: in a free [Stadia Maps account](https://client.stadiamaps.com),
+add your domain (e.g. `<user>.github.io`) under Authentication
+Configuration. Requests with your domain's referer then work keyless, and
+every other origin gets a 401. Nothing secret ships in the page, and there
+is no key for anyone to copy.
 
-1. Create a Stadia Maps account and an API key. In their dashboard,
-   restrict the key to your domains (e.g. `<user>.github.io`). The key ships
-   in the page source, so the domain restriction is what protects it.
-2. Locally (optional): paste it into `.env` (`STADIA_API_KEY=...`, see
-   `.env.example`) and run `sh scripts/build-config.sh` to generate
-   `app/config.js`. Both files are gitignored.
-3. For deploys: `gh secret set STADIA_API_KEY` (or repository Settings →
-   Secrets and variables → Actions). The workflow injects it at deploy time.
+(API keys exist too, but they can't be locked to a domain, so a key in a
+static site is readable and usable by anyone. If you need one for some
+other client, `.env` + `scripts/build-config.sh` and the `STADIA_API_KEY`
+repo secret can still inject it at deploy time; the app works either way.)
 
-Without a key the deployed app automatically falls back to plain
-OpenStreetMap tiles, so nothing breaks; it just loses the blue toner look.
+Without domain registration the deployed app automatically falls back to
+plain OpenStreetMap tiles, so nothing breaks; it just loses the blue look.
 
 ## Contributing
 
