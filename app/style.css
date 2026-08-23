@@ -366,6 +366,7 @@ body {
 }
 
 /* ---- result ---- */
+#result { z-index: 2200; }
 .result {
   position: fixed; inset: 0; z-index: 2100;
   background: var(--paper);
