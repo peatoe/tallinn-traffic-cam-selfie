@@ -375,6 +375,7 @@ body {
 .confirm-actions {
   display: flex; gap: 10px; margin-top: 18px;
 }
+.confirm-card .result-safety { margin-top: 14px; }
 .confirm-actions .btn { flex: 1; }
 .btn-danger { background: #d92b1c; color: #fff; }
 
@@ -491,15 +492,6 @@ body {
 }
 .clip-fps { margin-left: 0; }
 .clip-fps .chip { padding: 5px 12px; font-variant-numeric: tabular-nums; }
-.clip-note {
-  line-height: 1.5;
-  background: var(--mist); border: 1px solid var(--line);
-  border-radius: 12px; padding: 12px 14px;
-  color: #444;
-}
-.clip-note p { margin: 0 0 7px; }
-.clip-note ul { margin: 0; padding-left: 17px; }
-.clip-note li { margin: 3px 0; }
 /* a clip shows as one thumbnail with its frame count */
 /* top-left, opposite the delete x: the wrapper also holds the date caption
    below the thumbnail, so anchoring to the bottom covered it */
@@ -540,6 +532,16 @@ body {
   font-size: 12px; color: #777; margin: 4px 0 0 4px;
 }
 .result-note { font-size: 13px; color: #777; margin: 14px 0; text-align: center; }
+/* boxed note, shared by the clip player and the photo result */
+.note-card {
+  line-height: 1.5;
+  background: var(--mist); border: 1px solid var(--line);
+  border-radius: 12px; padding: 12px 14px;
+  color: #444;
+}
+.note-card p { margin: 0 0 7px; }
+.note-card ul { margin: 0; padding-left: 17px; }
+.note-card li { margin: 3px 0; }
 .result-safety {
   margin-top: 0;
   padding-top: 10px;
